@@ -19,7 +19,7 @@
     <img alt="PRs Welcome" src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg">
   </a>
   <br>
-  <i>A loading-screen wrapper for
+  <i>A tab view wrapper for
   <a href="https://github.com/gyscos/cursive">gyscos/cursive</a>
   views</i>
 </p>
@@ -34,8 +34,7 @@ This project provides a wrapper view to be able to easily handle multiple tabs t
 
 <details>
   <summary>Expand to view</summary>
-  <img src="assets/tabs-loading.gif" alt="tabs-loading demo">
-  <img src="assets/tabs-progress.gif" alt="tabs-progress demo">
+  <img src="assets/demo.gif" alt="tabs demo">
 </details>
 
 ## Usage

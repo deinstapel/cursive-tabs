@@ -1,0 +1,125 @@
+# The configurations that used for the recording, feel free to edit them
+config:
+
+    # Specify a command to be executed
+    # like `/bin/bash -l`, `ls`, or any other commands
+    # the default is bash for Linux
+    # or powershell.exe for Windows
+    command: ../target/debug/examples/simple
+    
+    # Specify the current working directory path
+    # the default is the current working directory path
+    cwd: null
+    
+    # Export additional ENV variables
+    env:
+      recording: true
+    
+    # Explicitly set the number of columns
+    # or use `auto` to take the current
+    # number of columns of your shell
+    cols: 80
+    
+    # Explicitly set the number of rows
+    # or use `auto` to take the current
+    # number of rows of your shell
+    rows: 24
+    
+    # Amount of times to repeat GIF
+    # If value is -1, play once
+    # If value is 0, loop indefinitely
+    # If value is a positive number, loop n times
+    repeat: 0
+    
+    # Quality
+    # 1 - 100
+    quality: 100
+    
+    # Delay between frames in ms
+    # If the value is `auto` use the actual recording delays
+    frameDelay: auto
+    
+    # Maximum delay between frames in ms
+    # Ignored if the `frameDelay` isn't set to `auto`
+    # Set to `auto` to prevent limiting the max idle time
+    maxIdleTime: 1000
+    
+    # The surrounding frame box
+    # The `type` can be null, window, floating, or solid`
+    # To hide the title use the value null
+    # Don't forget to add a backgroundColor style with a null as type
+    frameBox:
+      type: solid
+      title: null
+      style:
+        border: 0px black solid
+        # boxShadow: none
+        # margin: 0px
+    
+    # Add a watermark image to the rendered gif
+    # You need to specify an absolute path for
+    # the image on your machine or a URL, and you can also
+    # add your own CSS styles
+    watermark:
+      imagePath: null
+      style:
+        position: absolute
+        right: 15px
+        bottom: 15px
+        width: 100px
+        opacity: 0.9
+    
+    # Cursor style can be one of
+    # `block`, `underline`, or `bar`
+    cursorStyle: block
+    
+    # Font family
+    # You can use any font that is installed on your machine
+    # in CSS-like syntax
+    fontFamily: "Roboto Mono"
+    
+    # The size of the font
+    fontSize: 12
+    
+    # The height of lines
+    lineHeight: 1
+    
+    # The spacing between letters
+    letterSpacing: 0
+    
+    # Theme
+    theme:
+      background: "transparent"
+      foreground: "#afafaf"
+      cursor: "#c7c7c7"
+      black: "#232628"
+      red: "#fc4384"
+      green: "#b3e33b"
+      yellow: "#ffa727"
+      blue: "#003366"
+      magenta: "#ae89fe"
+      cyan: "#708387"
+      white: "#d5d5d0"
+      brightBlack: "#626566"
+      brightRed: "#ff7fac"
+      brightGreen: "#c8ed71"
+      brightYellow: "#ebdf86"
+      brightBlue: "#75dff2"
+      brightMagenta: "#ae89fe"
+      brightCyan: "#b1c6ca"
+      brightWhite: "#f9f9f4"
+  
+# Records, feel free to edit them
+records:
+  - delay: 373
+    content: "\e[?1049h\e[22;0;0t\e[1;24r\e(B\e[m\e[4l\e[?7h\e[?1h\e=\e[?1006;1000h\e[39;49m\e[?25l\e[?1002h\e[39;49m\e[34m\e[44m\e[H\e[2J\e[16d\e[J\e[H\e[K\n\e[K\n\e[K\n\e[K\n\e[K\n\e[K\n\e[K\n\e[K\n\e[K\e[10;26H\e[1K \e[30m\e[47m┌─────────────────────────┐\e[34m\e[44m\e[K\e[11;26H\e[1K \e[30m\e[47m│ This is the first view! │\e[30m\e[40m \e[34m\e[44m\e[K\e[12;26H\e[1K \e[30m\e[47m│\e[25X\e[12;53H│\e[30m\e[40m \e[34m\e[44m\e[K\e[13;26H\e[1K \e[30m\e[47m│\e[18X\e[13;46H\e[37m\e[41m<Next>\e[30m\e[47m │\e[30m\e[40m \e[34m\e[44m\e[K\e[14;26H\e[1K \e[30m\e[47m└─────────────────────────┘\e[30m\e[40m \e[34m\e[44m\e[K\e[15;27H\e[1K \e[30m\e[40m\e[27X\e[15;55H\e[34m\e[44m\e[K\e[13d\b\e[39;49m\e(B\e[m"
+  - delay: 1807
+    content: "\e[34m\e[44m\e[H\e[2J\e[16d\e[J\e[H\e[K\n\e[K\n\e[K\n\e[K\n\e[K\n\e[K\n\e[K\n\e[K\n\e[K\e[10;26H\e[1K \e[30m\e[47m┌──────────────────────────┐\e[34m\e[44m\e[K\e[11;26H\e[1K \e[30m\e[47m│ This is the second view! │\e[30m\e[40m \e[34m\e[44m\e[K\e[12;26H\e[1K \e[30m\e[47m│\e[26X\e[12;54H│\e[30m\e[40m \e[34m\e[44m\e[K\e[13;26H\e[1K \e[30m\e[47m│\e[19X\e[13;47H\e[37m\e[41m<Next>\e[30m\e[47m │\e[30m\e[40m \e[34m\e[44m\e[K\e[14;26H\e[1K \e[30m\e[47m└──────────────────────────┘\e[30m\e[40m \e[34m\e[44m\e[K\e[15;27H\e[1K \e[30m\e[40m\e[28X\e[15;56H\e[34m\e[44m\e[K\e[13d\b\e[39;49m\e(B\e[m"
+  - delay: 1149
+    content: "\e[34m\e[44m\e[H\e[2J\e[16d\e[J\e[H\e[K\n\e[K\n\e[K\n\e[K\n\e[K\n\e[K\n\e[K\n\e[K\n\e[K\e[10;26H\e[1K \e[30m\e[47m┌─────────────────────────┐\e[34m\e[44m\e[K\e[11;26H\e[1K \e[30m\e[47m│ This is the third view! │\e[30m\e[40m \e[34m\e[44m\e[K\e[12;26H\e[1K \e[30m\e[47m│\e[25X\e[12;53H│\e[30m\e[40m \e[34m\e[44m\e[K\e[13;26H\e[1K \e[30m\e[47m│\e[18X\e[13;46H\e[37m\e[41m<Next>\e[30m\e[47m │\e[30m\e[40m \e[34m\e[44m\e[K\e[14;26H\e[1K \e[30m\e[47m└─────────────────────────┘\e[30m\e[40m \e[34m\e[44m\e[K\e[15;27H\e[1K \e[30m\e[40m\e[27X\e[15;55H\e[34m\e[44m\e[K\e[13d\b\e[39;49m\e(B\e[m"
+  - delay: 1119
+    content: "\e[34m\e[44m\e[H\e[2J\e[16d\e[J\e[H\e[K\n\e[K\n\e[K\n\e[K\n\e[K\n\e[K\n\e[K\n\e[K\n\e[K\e[10;26H\e[1K \e[30m\e[47m┌──────────────────────────┐\e[34m\e[44m\e[K\e[11;26H\e[1K \e[30m\e[47m│ This is the fourth view! │\e[30m\e[40m \e[34m\e[44m\e[K\e[12;26H\e[1K \e[30m\e[47m│\e[26X\e[12;54H│\e[30m\e[40m \e[34m\e[44m\e[K\e[13;26H\e[1K \e[30m\e[47m│\e[19X\e[13;47H\e[37m\e[41m<Next>\e[30m\e[47m │\e[30m\e[40m \e[34m\e[44m\e[K\e[14;26H\e[1K \e[30m\e[47m└──────────────────────────┘\e[30m\e[40m \e[34m\e[44m\e[K\e[15;27H\e[1K \e[30m\e[40m\e[28X\e[15;56H\e[34m\e[44m\e[K\e[13d\b\e[39;49m\e(B\e[m"
+  - delay: 1543
+    content: "\e[34m\e[44m\e[H\e[2J\e[16d\e[J\e[H\e[K\n\e[K\n\e[K\n\e[K\n\e[K\n\e[K\n\e[K\n\e[K\n\e[K\e[10;26H\e[1K \e[30m\e[47m┌─────────────────────────┐\e[34m\e[44m\e[K\e[11;26H\e[1K \e[30m\e[47m│ This is the first view! │\e[30m\e[40m \e[34m\e[44m\e[K\e[12;26H\e[1K \e[30m\e[47m│\e[25X\e[12;53H│\e[30m\e[40m \e[34m\e[44m\e[K\e[13;26H\e[1K \e[30m\e[47m│\e[18X\e[13;46H\e[37m\e[41m<Next>\e[30m\e[47m │\e[30m\e[40m \e[34m\e[44m\e[K\e[14;26H\e[1K \e[30m\e[47m└─────────────────────────┘\e[30m\e[40m \e[34m\e[44m\e[K\e[15;27H\e[1K \e[30m\e[40m\e[27X\e[15;55H\e[34m\e[44m\e[K\e[13d\b\e[39;49m\e(B\e[m"
+  - delay: 1360
+    content: "\e[?1002l\e[?1006;1000l\e[24;1H\e[?12l\e[?25h\e[?1049l\e[23;0;0t\r\e[?1l\e>"
