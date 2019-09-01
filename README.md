@@ -66,11 +66,27 @@ siv.run();
 
 If you find any bugs/unexpected behaviour or you have a proposition for future changes open an issue describing the current behaviour and what you expected.
 
-## Development [![cargo test](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fdeinstapel.github.io%2Fcursive-tabs%2Fcargo-test.json)](https://travis-ci.org/deinstapel/cursive-tabs)
+## Development [![cargo test](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fdeinstapel.github.io%2Fcursive-tabs%2Fcargo-test.json)](https://travis-ci.org/deinstapel/cursive-tabs) [![shellshot](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fdeinstapel.github.io%2Fcursive-tabs%2Fshellshot.json)](https://github.com/fin-ger/shellshot)
 
 > TBD
 
 ### Running the tests
+
+> :bangbang: **CAUTION** :bangbang: This crate uses Tmux for end2end testing and will **kill your Tmux server** during testing!
+
+#### Preparing integration tests
+
+In order to run the integration tests, you first need to install a recent version of `>=npm-10` and `>=tmux-2.6`!
+
+After `npm` and `tmux` are installed, install required dependencies:
+
+```
+$ ./scripts/prepare-end2end-tests.sh
+```
+
+This will use `npm` to install `jest` and `shellshot` in the `tests` folder.
+
+#### Running all test suites
 
 Just run
 

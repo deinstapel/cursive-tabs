@@ -3,9 +3,18 @@ name = "cursive-tabs"
 version = "0.1.0"
 authors = ["Johannes Wünsche <johannes.wuensche97@gmail.com>"]
 edition = "2018"
+description = "Tabs for gyscos/cursive views"
+license = "BSD-3-Clause"
+readme = "README.md"
+keywords = ["cursive", "tui", "terminal", "tabs", "view"]
+repository = "https://github.com/deinstapel/cursive-tabs"
+homepage = "https://github.com/deinstapel/cursive-tabs"
+documentation = "https://docs.rs/cursive-tabs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 cursive = "0.13.0"
+
+[dev-dependencies]
 serde_json = "1.0.40"
