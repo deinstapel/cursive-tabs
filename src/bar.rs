@@ -1,11 +1,11 @@
-use cursive::views::{LinearLayout, Button, Panel, ViewRef, IdView};
-use cursive::view::{View, Selector};
-use cursive::event::{Event, EventResult, AnyCb, MouseEvent, MouseButton, Key};
-use cursive::{Printer, Vec2, Cursive};
-use cursive::direction::Direction;
 use crossbeam::{unbounded, Sender};
-use std::hash::Hash;
+use cursive::direction::Direction;
+use cursive::event::{AnyCb, Event, EventResult, Key, MouseButton, MouseEvent};
+use cursive::view::{Selector, View};
+use cursive::views::{Button, IdView, LinearLayout, Panel, ViewRef};
+use cursive::{Cursive, Printer, Vec2};
 use log::debug;
+use std::hash::Hash;
 
 use crate::TabView;
 
@@ -57,17 +57,19 @@ impl<K: Hash + Eq + Copy + 'static> TabPanel<K> {
     pub fn get_tab_order(&self) -> Vec<K> {
         self.tabs.get_inner().get_tab_order()
     }
-
 }
 
 impl<K: Hash + Eq + Copy + std::fmt::Display + 'static> View for TabPanel<K> {
-
     fn draw(&self, printer: &Printer) {
         println!("printer size {:?}", printer.size);
         println!("bar size: {:?}", self.bar_size);
-        let printer_bar = printer.cropped(Vec2::new(printer.size.x, self.bar_size.y)).focused(self.bar_focused);
+        let printer_bar = printer
+            .cropped(Vec2::new(printer.size.x, self.bar_size.y))
+            .focused(self.bar_focused);
         println!("printer size {:?}", printer.size);
-        let printer_tab = printer.offset(Vec2::new(0, self.bar_size.y)).focused(!self.bar_focused);
+        let printer_tab = printer
+            .offset(Vec2::new(0, self.bar_size.y))
+            .focused(!self.bar_focused);
         println!("printer bar: {:?}", printer_bar.size);
         println!("printer tab: {:?}", printer_tab.size);
         self.bar.draw(&printer_bar);
@@ -86,23 +88,21 @@ impl<K: Hash + Eq + Copy + std::fmt::Display + 'static> View for TabPanel<K> {
     fn required_size(&mut self, cst: Vec2) -> Vec2 {
         if self.order != self.get_tab_order() {
             println!("rebuild time!");
-            let mut bar = LinearLayout::horizontal();
-            let txc = self.tx.clone();
+            self.bar = LinearLayout::horizontal();
             for key in self.get_tab_order() {
-                let n_tx = txc.clone();
-                let button = Button::new_raw(format!("│{}│", key), move |_|{
+                let n_tx = self.tx.clone();
+                let button = Button::new_raw(format!("│{}│", key), move |_| {
                     println!("send {}", key);
                     match n_tx.send(key) {
-                        Ok(_) => {},
+                        Ok(_) => {}
                         Err(err) => {
                             debug!("button could not send key: {:?}", err);
-                        },
+                        }
                     }
                 });
-                bar.add_child(button);
+                self.bar.add_child(button);
             }
             self.order = self.get_tab_order();
-            self.bar = bar;
         }
         self.bar_size = self.bar.required_size(cst);
         self.bar_size.stack_vertical(&self.tabs.required_size(cst))
@@ -110,8 +110,15 @@ impl<K: Hash + Eq + Copy + std::fmt::Display + 'static> View for TabPanel<K> {
 
     fn on_event(&mut self, evt: Event) -> EventResult {
         match evt.clone() {
-            Event::Mouse{offset, position, event: _} => {
-                println!("mouse event: offset: {:?} , position: {:?}", offset, position);
+            Event::Mouse {
+                offset,
+                position,
+                event: _,
+            } => {
+                println!(
+                    "mouse event: offset: {:?} , position: {:?}",
+                    offset, position
+                );
                 if position > offset {
                     if (position - offset).fits_in(self.bar_size) {
                         self.bar_focused = true;
@@ -119,8 +126,8 @@ impl<K: Hash + Eq + Copy + std::fmt::Display + 'static> View for TabPanel<K> {
                         self.bar_focused = false;
                     }
                 }
-            },
-            _ => {},
+            }
+            _ => {}
         }
 
         if self.bar_focused {
@@ -133,27 +140,25 @@ impl<K: Hash + Eq + Copy + std::fmt::Display + 'static> View for TabPanel<K> {
                         Event::Key(Key::Down) => {
                             self.bar_focused = false;
                             EventResult::Consumed(None)
-                        },
-                        _ => {EventResult::Ignored},
+                        }
+                        _ => EventResult::Ignored,
                     }
                 }
             }
         } else {
-            match self.tabs.on_event(evt.relativized((0,1))) {
+            match self.tabs.on_event(evt.relativized((0, self.bar_size.y))) {
                 EventResult::Consumed(_) => EventResult::Consumed(None),
-                EventResult::Ignored => {
-                    match evt {
-                        Event::Key(Key::Up) => {
-                            self.bar_focused = true;
-                            if self.tabs.take_focus(Direction::up()) {
-                                EventResult::Consumed(None)
-                            } else {
-                                EventResult::Ignored
-                            }
-                        },
-                        _ => {EventResult::Ignored},
+                EventResult::Ignored => match evt {
+                    Event::Key(Key::Up) => {
+                        self.bar_focused = true;
+                        if self.tabs.take_focus(Direction::up()) {
+                            EventResult::Consumed(None)
+                        } else {
+                            EventResult::Ignored
+                        }
                     }
-                }
+                    _ => EventResult::Ignored,
+                },
             }
         }
     }
@@ -164,10 +169,10 @@ impl<K: Hash + Eq + Copy + std::fmt::Display + 'static> View for TabPanel<K> {
                 if self.tabs.take_focus(d) {
                     self.bar_focused = false;
                 }
-            },
+            }
             _ => {
                 self.bar_focused = true;
-            },
+            }
         }
         true
     }
@@ -177,6 +182,6 @@ impl<K: Hash + Eq + Copy + std::fmt::Display + 'static> View for TabPanel<K> {
     }
 
     fn call_on_any<'a>(&mut self, slt: &Selector, mut cb: AnyCb<'a>) {
-        self.bar.call_on_any(slt, Box::new(|any| cb(any)), )
+        self.bar.call_on_any(slt, Box::new(|any| cb(any)))
     }
 }

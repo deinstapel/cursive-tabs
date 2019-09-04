@@ -37,14 +37,14 @@
 //!   // siv.run();
 //! }
 //! ```
+use crossbeam::Receiver;
 use cursive::direction::Direction;
 use cursive::event::{AnyCb, Event, EventResult};
 use cursive::view::{Selector, View};
 use cursive::{Printer, Rect, Vec2};
+use log::debug;
 use std::collections::HashMap;
 use std::hash::Hash;
-use log::debug;
-use crossbeam::{Receiver};
 
 mod bar;
 
@@ -129,13 +129,11 @@ impl<K: Hash + Eq + Copy + 'static> TabView<K> {
                     self.current_id = None;
                 }
             }
-            self.key_order = self.key_order.iter().filter_map(|key| {
-                if id == *key {
-                    None
-                } else {
-                    Some(*key)
-                }
-            }).collect();
+            self.key_order = self
+                .key_order
+                .iter()
+                .filter_map(|key| if id == *key { None } else { Some(*key) })
+                .collect();
             Ok(id)
         } else {
             Err(())
@@ -170,7 +168,7 @@ impl<K: Hash + Eq + Copy + 'static> View for TabView<K> {
         if let Some(rx) = &self.bar_rx {
             if let Ok(evt) = rx.try_recv() {
                 match self.set_tab(evt) {
-                    Ok(_) => {},
+                    Ok(_) => {}
                     Err(err) => debug!("could not accept tab bar event: {:?}", err),
                 }
             }
@@ -245,11 +243,10 @@ impl<K: Hash + Eq + Copy + 'static> View for TabView<K> {
             Rect::from((1, 1))
         }
     }
-
 }
 
 #[cfg(test)]
-mod test{
+mod test {
     use super::TabView;
     use cursive::views::DummyView;
 
