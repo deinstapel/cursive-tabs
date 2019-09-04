@@ -43,11 +43,20 @@ use cursive::view::{Selector, View};
 use cursive::{Printer, Rect, Vec2};
 use std::collections::HashMap;
 use std::hash::Hash;
+use log::debug;
+use crossbeam::{Receiver};
+
+mod bar;
+
+// Reexports
+pub use bar::TabPanel;
 
 /// Main struct which manages views
 pub struct TabView<K: Hash> {
     current_id: Option<K>,
     map: HashMap<K, Box<dyn View>>,
+    key_order: Vec<K>,
+    bar_rx: Option<Receiver<K>>,
 }
 
 impl<K: Hash + Eq + Copy + 'static> TabView<K> {
@@ -71,6 +80,8 @@ impl<K: Hash + Eq + Copy + 'static> TabView<K> {
         Self {
             current_id: None,
             map: HashMap::new(),
+            key_order: Vec::new(),
+            bar_rx: None,
         }
     }
 
@@ -90,14 +101,16 @@ impl<K: Hash + Eq + Copy + 'static> TabView<K> {
     pub fn with_view<T: View>(mut self, id: K, view: T) -> Self {
         self.map.insert(id, Box::new(view));
         self.current_id = Some(id);
+        self.key_order.push(id);
         self
     }
 
-    /// Non-cosuming insertion of a new view.
+    /// Non-consuming insertion of a new view.
     /// Active tab will be switched to the newly inserted one.
     pub fn insert_view<T: View>(&mut self, id: K, view: T) -> K {
         self.map.insert(id, Box::new(view));
         self.current_id = Some(id);
+        self.key_order.push(id);
         id
     }
 
@@ -107,7 +120,7 @@ impl<K: Hash + Eq + Copy + 'static> TabView<K> {
     }
 
     /// Removes the given id from the `TabView`.
-    /// If the removed view is active at the moment, the `TabView` will unfocus it and the focus needs to be set manually afterwards, or anew view has to be inserted.
+    /// If the removed view is active at the moment, the `TabView` will unfocus it and the focus needs to be set manually afterwards, or a new view has to be inserted.
     pub fn remove_view(&mut self, id: K) -> Result<K, ()> {
         if let Some(_) = self.map.remove(&id) {
             if let Some(key) = &self.current_id {
@@ -116,14 +129,27 @@ impl<K: Hash + Eq + Copy + 'static> TabView<K> {
                     self.current_id = None;
                 }
             }
+            self.key_order = self.key_order.iter().filter_map(|key| {
+                if id == *key {
+                    None
+                } else {
+                    Some(*key)
+                }
+            }).collect();
             Ok(id)
         } else {
             Err(())
         }
     }
+
+    /// Returns the current order of keys in a vector.
+    /// When you're implementing your own tab bar, be aware that this is the current tab bar and is only a copy of the original order, modification will not be transferred and future updates in the original not displayed.
+    pub fn get_tab_order(&self) -> Vec<K> {
+        self.key_order.clone()
+    }
 }
 
-impl<K: Hash + Eq + 'static> View for TabView<K> {
+impl<K: Hash + Eq + Copy + 'static> View for TabView<K> {
     fn draw(&self, printer: &Printer) {
         if let Some(key) = &self.current_id {
             if let Some(view) = self.map.get(&key) {
@@ -141,6 +167,14 @@ impl<K: Hash + Eq + 'static> View for TabView<K> {
     }
 
     fn required_size(&mut self, req: Vec2) -> Vec2 {
+        if let Some(rx) = &self.bar_rx {
+            if let Ok(evt) = rx.try_recv() {
+                match self.set_tab(evt) {
+                    Ok(_) => {},
+                    Err(err) => debug!("could not accept tab bar event: {:?}", err),
+                }
+            }
+        }
         if let Some(key) = &self.current_id {
             if let Some(view) = self.map.get_mut(&key) {
                 view.required_size(req)
@@ -197,15 +231,7 @@ impl<K: Hash + Eq + 'static> View for TabView<K> {
     }
 
     fn needs_relayout(&self) -> bool {
-        if let Some(key) = &self.current_id {
-            if let Some(view) = self.map.get(&key) {
-                view.needs_relayout()
-            } else {
-                false
-            }
-        } else {
-            false
-        }
+        true
     }
 
     fn important_area(&self, size: Vec2) -> Rect {
@@ -220,27 +246,6 @@ impl<K: Hash + Eq + 'static> View for TabView<K> {
         }
     }
 
-    //fn with_view<F, R>(&self, f: F) -> Option<R>
-    //where
-    //    F: FnOnce(&Self::V) -> R
-    //{
-    //    if let Some(key) = self.current_id {
-    //        Some(f(self.map.get(&key)))
-    //    } else {
-    //        None
-    //    }
-    //}
-
-    //fn with_view_mut<F, R>(&mut self, f: F) -> Option<R>
-    //where
-    //    F: FnOnce(&mut Self::V) -> R
-    //{
-    //    if let Some(key) = self.current_id {
-    //        Some(f(self.map.get_mut(&key)))
-    //    } else {
-    //        None
-    //    }
-    //}
 }
 
 #[cfg(test)]
