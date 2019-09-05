@@ -1,187 +1,132 @@
-use crossbeam::{unbounded, Sender};
-use cursive::direction::Direction;
-use cursive::event::{AnyCb, Event, EventResult, Key, MouseButton, MouseEvent};
-use cursive::view::{Selector, View};
-use cursive::views::{Button, IdView, LinearLayout, Panel, ViewRef};
-use cursive::{Cursive, Printer, Vec2};
+use crossbeam::Sender;
+use cursive::event::{Event, EventResult, Key};
+use cursive::view::View;
+use cursive::views::Button;
+use cursive::{Printer, Vec2};
 use log::debug;
+use std::fmt::Display;
 use std::hash::Hash;
 
-use crate::TabView;
-
-pub struct TabPanel<K: Hash + Eq + Copy + 'static> {
-    order: Vec<K>,
-    bar: LinearLayout,
-    bar_size: Vec2,
-    tx: Sender<K>,
-    tabs: Panel<TabView<K>>,
-    bar_focused: bool,
+pub struct TabBar {
+    children: Vec<Button>,
+    // List of accumulated sizes of prev buttons
+    sizes: Vec<Vec2>,
+    idx: Option<usize>,
 }
 
-impl<K: Hash + Eq + Copy + 'static> TabPanel<K> {
+impl TabBar {
     pub fn new() -> Self {
-        let mut tabs = Panel::new(TabView::new());
-        let (tx, rx) = unbounded();
-        tabs.get_inner_mut().bar_rx = Some(rx);
         Self {
-            order: Vec::new(),
-            bar: LinearLayout::horizontal(),
-            bar_size: Vec2::new(1, 1),
-            tabs,
-            tx,
-            bar_focused: false,
+            children: Vec::new(),
+            sizes: Vec::new(),
+            idx: None,
         }
     }
 
-    pub fn insert_view<T: View>(&mut self, id: K, view: T) -> K {
-        self.tabs.get_inner_mut().insert_view(id, view)
-    }
-
-    pub fn with_view<T: View>(mut self, id: K, view: T) -> Self {
-        self.tabs.get_inner_mut().insert_view(id, view);
-        self
-    }
-
-    pub fn tab(&self) -> Option<K> {
-        self.tabs.get_inner().tab()
-    }
-
-    pub fn set_tab(&mut self, id: K) -> Result<(), ()> {
-        self.tabs.get_inner_mut().set_tab(id)
-    }
-
-    pub fn remove_view(&mut self, id: K) -> Result<K, ()> {
-        self.tabs.get_inner_mut().remove_view(id)
-    }
-
-    pub fn get_tab_order(&self) -> Vec<K> {
-        self.tabs.get_inner().get_tab_order()
+    pub fn add_button<K: Hash + Eq + Copy + Display + 'static>(&mut self, tx: Sender<K>, key: K) {
+        let button = Button::new_raw(format!("│{}│", key), move |_| {
+            debug!("send {}", key);
+            match tx.send(key) {
+                Ok(_) => {}
+                Err(err) => {
+                    debug!("button could not send key: {:?}", err);
+                }
+            }
+        });
+        self.children.push(button);
+        self.idx = Some(self.children.len() - 1);
     }
 }
 
-impl<K: Hash + Eq + Copy + std::fmt::Display + 'static> View for TabPanel<K> {
+impl View for TabBar {
     fn draw(&self, printer: &Printer) {
-        println!("printer size {:?}", printer.size);
-        println!("bar size: {:?}", self.bar_size);
-        let printer_bar = printer
-            .cropped(Vec2::new(printer.size.x, self.bar_size.y))
-            .focused(self.bar_focused);
-        println!("printer size {:?}", printer.size);
-        let printer_tab = printer
-            .offset(Vec2::new(0, self.bar_size.y))
-            .focused(!self.bar_focused);
-        println!("printer bar: {:?}", printer_bar.size);
-        println!("printer tab: {:?}", printer_tab.size);
-        self.bar.draw(&printer_bar);
-        self.tabs.draw(&printer_tab);
+        // Horizontal split for children
+        let len = self.children.len();
+        let mut count = 0;
+        for child in &self.children {
+            // There is no chainable api...
+            let mut rel_sizes = self.sizes.clone();
+            rel_sizes.truncate(count);
+            let mut print = printer
+                .offset(
+                    rel_sizes
+                        .iter()
+                        .fold(Vec2::new(0, 0), |acc, x| acc.stack_horizontal(x))
+                        .keep_x(),
+                )
+                .cropped(self.sizes[count]);
+            // Set of focus to be focus even if the bar itself is not
+            if let Some(focus) = self.idx {
+                print.focused = focus == count;
+            }
+            count += 1;
+            debug!("Printer for Button: is {:?}", print.size);
+            debug!("With offset: {:?}", print.offset);
+            child.draw(&print);
+        }
     }
 
     fn layout(&mut self, vec: Vec2) {
-        self.bar.layout(Vec2::new(vec.x, self.bar_size.y));
-        self.tabs.layout(Vec2::new(vec.x, vec.y - self.bar_size.y));
-    }
-
-    fn needs_relayout(&self) -> bool {
-        true
+        // Cannot borrow immutable later on
+        let len = self.children.len();
+        for child in &mut self.children {
+            child.layout(Vec2::new(vec.x / len, vec.y));
+        }
     }
 
     fn required_size(&mut self, cst: Vec2) -> Vec2 {
-        if self.order != self.get_tab_order() {
-            println!("rebuild time!");
-            self.bar = LinearLayout::horizontal();
-            for key in self.get_tab_order() {
-                let n_tx = self.tx.clone();
-                let button = Button::new_raw(format!("│{}│", key), move |_| {
-                    println!("send {}", key);
-                    match n_tx.send(key) {
-                        Ok(_) => {}
-                        Err(err) => {
-                            debug!("button could not send key: {:?}", err);
-                        }
-                    }
-                });
-                self.bar.add_child(button);
-            }
-            self.order = self.get_tab_order();
+        self.sizes.clear();
+        for child in &mut self.children {
+            let size = child.required_size(cst);
+            self.sizes.push(size);
         }
-        self.bar_size = self.bar.required_size(cst);
-        self.bar_size.stack_vertical(&self.tabs.required_size(cst))
+        self.sizes
+            .clone()
+            .iter()
+            .fold(Vec2::new(0, 0), |acc, x| acc.stack_horizontal(x))
     }
 
     fn on_event(&mut self, evt: Event) -> EventResult {
-        match evt.clone() {
-            Event::Mouse {
-                offset,
-                position,
-                event: _,
-            } => {
-                println!(
-                    "mouse event: offset: {:?} , position: {:?}",
-                    offset, position
-                );
-                if position > offset {
-                    if (position - offset).fits_in(self.bar_size) {
-                        self.bar_focused = true;
+        // TODO Mouse Events for all children
+
+        if let Some(focus) = self.idx {
+            debug!("Passing event {:?} to button {}.", evt.clone(), focus);
+            let result = self.children[focus].on_event(evt.clone());
+            match result {
+                EventResult::Consumed(_) => {
+                    debug!("Event has callback: {}", result.has_callback());
+                    return result;
+                }
+                _ => {}
+            }
+        }
+
+        match evt {
+            Event::Key(Key::Left) => {
+                if let Some(index) = self.idx {
+                    if index > 0 {
+                        self.idx = Some(index - 1);
+                        EventResult::Consumed(None)
                     } else {
-                        self.bar_focused = false;
+                        EventResult::Ignored
                     }
+                } else {
+                    EventResult::Ignored
                 }
             }
-            _ => {}
-        }
-
-        if self.bar_focused {
-            println!("event to bar please respond!: {:?}", evt.clone());
-            match self.bar.on_event(evt.clone()) {
-                EventResult::Consumed(_) => EventResult::Consumed(None),
-                EventResult::Ignored => {
-                    println!("but it rejected!");
-                    match evt {
-                        Event::Key(Key::Down) => {
-                            self.bar_focused = false;
-                            EventResult::Consumed(None)
-                        }
-                        _ => EventResult::Ignored,
+            Event::Key(Key::Right) => {
+                if let Some(index) = self.idx {
+                    if index == (self.children.len() - 1) {
+                        EventResult::Ignored
+                    } else {
+                        self.idx = Some(index + 1);
+                        EventResult::Consumed(None)
                     }
+                } else {
+                    EventResult::Ignored
                 }
             }
-        } else {
-            match self.tabs.on_event(evt.relativized((0, self.bar_size.y))) {
-                EventResult::Consumed(_) => EventResult::Consumed(None),
-                EventResult::Ignored => match evt {
-                    Event::Key(Key::Up) => {
-                        self.bar_focused = true;
-                        if self.tabs.take_focus(Direction::up()) {
-                            EventResult::Consumed(None)
-                        } else {
-                            EventResult::Ignored
-                        }
-                    }
-                    _ => EventResult::Ignored,
-                },
-            }
+            _ => EventResult::Ignored,
         }
-    }
-
-    fn take_focus(&mut self, d: Direction) -> bool {
-        match d {
-            _ if d == Direction::down() => {
-                if self.tabs.take_focus(d) {
-                    self.bar_focused = false;
-                }
-            }
-            _ => {
-                self.bar_focused = true;
-            }
-        }
-        true
-    }
-
-    fn focus_view(&mut self, slt: &Selector) -> Result<(), ()> {
-        self.tabs.focus_view(slt)
-    }
-
-    fn call_on_any<'a>(&mut self, slt: &Selector, mut cb: AnyCb<'a>) {
-        self.bar.call_on_any(slt, Box::new(|any| cb(any)))
     }
 }

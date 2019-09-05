@@ -47,9 +47,11 @@ use std::collections::HashMap;
 use std::hash::Hash;
 
 mod bar;
+mod panel;
 
 // Reexports
-pub use bar::TabPanel;
+use bar::TabBar;
+pub use panel::TabPanel;
 
 /// Main struct which manages views
 pub struct TabView<K: Hash> {

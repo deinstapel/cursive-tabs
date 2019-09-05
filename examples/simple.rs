@@ -1,5 +1,5 @@
 use cursive::view::Identifiable;
-use cursive::views::{Dialog, TextView, TextArea};
+use cursive::views::{Dialog, TextArea, TextView};
 use cursive::Cursive;
 use cursive_tabs::TabPanel;
 
