@@ -50,7 +50,7 @@ mod bar;
 mod panel;
 
 // Reexports
-use bar::TabBar;
+use bar::{TabBar, Bar};
 pub use panel::TabPanel;
 
 /// Main struct which manages views

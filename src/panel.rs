@@ -8,7 +8,7 @@ use log::debug;
 use std::hash::Hash;
 
 use crate::TabBar;
-
+use crate::Bar;
 use crate::TabView;
 
 pub struct TabPanel<K: Hash + Eq + Copy + 'static> {

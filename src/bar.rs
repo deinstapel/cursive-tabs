@@ -14,8 +14,8 @@ pub struct TabBar {
     idx: Option<usize>,
 }
 
-trait Bar {
-    fn add_button<K: Hash + Eq + Copy + 'static>(&mut self, tx: Sender<K>, key: K);
+pub trait Bar {
+    fn add_button<K: Hash + Eq + Copy + Display + 'static>(&mut self, tx: Sender<K>, key: K);
 }
 
 // Quick Wrapper around Views to be able to set their positon
@@ -45,8 +45,10 @@ impl TabBar {
             idx: None,
         }
     }
+}
 
-    pub fn add_button<K: Hash + Eq + Copy + Display + 'static>(&mut self, tx: Sender<K>, key: K) {
+impl Bar for TabBar {
+    fn add_button<K: Hash + Eq + Copy + Display + 'static>(&mut self, tx: Sender<K>, key: K) {
         let button = Button::new_raw(format!("│{}│", key), move |_| {
             debug!("send {}", key);
             match tx.send(key) {
@@ -79,7 +81,7 @@ impl View for TabBar {
                 .cropped(self.sizes[count]);
             // Set of focus to be focus even if the bar itself is not
             if let Some(focus) = self.idx {
-                print.focused = focus == count;
+                print.enabled = focus == count;
             }
             count += 1;
             debug!("Printer for Button: is {:?}", print.size);
