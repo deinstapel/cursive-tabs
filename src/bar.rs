@@ -41,7 +41,6 @@ impl TabBar {
 impl View for TabBar {
     fn draw(&self, printer: &Printer) {
         // Horizontal split for children
-        let len = self.children.len();
         let mut count = 0;
         for child in &self.children {
             // There is no chainable api...
