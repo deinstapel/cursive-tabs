@@ -1,17 +1,40 @@
 use crossbeam::Sender;
-use cursive::event::{Event, EventResult, Key};
-use cursive::view::View;
+use cursive::event::{Event, EventResult, Key, MouseButton, MouseEvent};
+use cursive::view::{View, ViewWrapper};
 use cursive::views::Button;
-use cursive::{Printer, Vec2};
+use cursive::{wrap_impl, Printer, Vec2};
 use log::debug;
 use std::fmt::Display;
 use std::hash::Hash;
 
 pub struct TabBar {
-    children: Vec<Button>,
+    children: Vec<PositionWrap<Button>>,
     // List of accumulated sizes of prev buttons
     sizes: Vec<Vec2>,
     idx: Option<usize>,
+}
+
+trait Bar {
+    fn add_button<K: Hash + Eq + Copy + 'static>(&mut self, tx: Sender<K>, key: K);
+}
+
+// Quick Wrapper around Views to be able to set their positon
+struct PositionWrap<T: View> {
+    view: T,
+    pub pos: Vec2,
+}
+
+impl<T: View> ViewWrapper for PositionWrap<T> {
+    wrap_impl!(self.view: T);
+}
+
+impl<T: View> PositionWrap<T> {
+    pub fn new(view: T) -> Self {
+        Self {
+            view,
+            pos: Vec2::zero(),
+        }
+    }
 }
 
 impl TabBar {
@@ -33,7 +56,7 @@ impl TabBar {
                 }
             }
         });
-        self.children.push(button);
+        self.children.push(PositionWrap::new(button));
         self.idx = Some(self.children.len() - 1);
     }
 }
@@ -65,18 +88,19 @@ impl View for TabBar {
         }
     }
 
-    fn layout(&mut self, vec: Vec2) {
-        // Cannot borrow immutable later on
-        let len = self.children.len();
-        for child in &mut self.children {
-            child.layout(Vec2::new(vec.x / len, vec.y));
+    fn layout(&mut self, _vec: Vec2) {
+        for (child, size) in self.children.iter_mut().zip(self.sizes.iter()) {
+            child.layout(*size);
         }
     }
 
     fn required_size(&mut self, cst: Vec2) -> Vec2 {
         self.sizes.clear();
+        let mut start = Vec2::zero();
         for child in &mut self.children {
             let size = child.required_size(cst);
+            start = start.stack_horizontal(&size.keep_x());
+            child.pos = start;
             self.sizes.push(size);
         }
         self.sizes
@@ -87,10 +111,38 @@ impl View for TabBar {
 
     fn on_event(&mut self, evt: Event) -> EventResult {
         // TODO Mouse Events for all children
+        match evt.clone() {
+            Event::Mouse {
+                offset,
+                position,
+                event,
+            } => {
+                let mut iter = self.children.iter().peekable();
+                let mut count = 0;
+                while let Some(child) = iter.next() {
+                    if position.checked_sub(offset).is_some() {
+                        if child.pos.fits(position - offset) {
+                            debug!("hit");
+                            match event {
+                                MouseEvent::Release(MouseButton::Left) => {
+                                    self.idx = Some(count);
+                                    return self.children[count].on_event(Event::Key(Key::Enter));
+                                }
+                                _ => {}
+                            }
+                        }
+                        count += 1;
+                    }
+                }
+            }
+            _ => {}
+        }
 
         if let Some(focus) = self.idx {
             debug!("Passing event {:?} to button {}.", evt.clone(), focus);
-            let result = self.children[focus].on_event(evt.clone());
+            let pos = self.children[focus].pos;
+            debug!("evt location: {:?}", evt.relativized(pos));
+            let result = self.children[focus].on_event(evt.relativized(pos));
             match result {
                 EventResult::Consumed(_) => {
                     debug!("Event has callback: {}", result.has_callback());

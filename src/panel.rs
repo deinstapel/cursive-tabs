@@ -2,7 +2,7 @@ use crossbeam::{unbounded, Sender};
 use cursive::direction::Direction;
 use cursive::event::{AnyCb, Event, EventResult, Key};
 use cursive::view::{Selector, View};
-use cursive::views::{Panel};
+use cursive::views::Panel;
 use cursive::{Printer, Vec2};
 use log::debug;
 use std::hash::Hash;
