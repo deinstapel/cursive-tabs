@@ -37,7 +37,7 @@
 //!   // siv.run();
 //! }
 //! ```
-use crossbeam::Receiver;
+use crossbeam::{Receiver, Sender};
 use cursive::direction::Direction;
 use cursive::event::{AnyCb, Event, EventResult};
 use cursive::view::{Selector, View};
@@ -50,7 +50,7 @@ mod bar;
 mod panel;
 
 // Reexports
-use bar::{TabBar, Bar};
+use bar::{Bar, TabBar};
 pub use panel::TabPanel;
 
 /// Main struct which manages views
@@ -59,6 +59,7 @@ pub struct TabView<K: Hash> {
     map: HashMap<K, Box<dyn View>>,
     key_order: Vec<K>,
     bar_rx: Option<Receiver<K>>,
+    active_key_tx: Option<Sender<K>>,
 }
 
 impl<K: Hash + Eq + Copy + 'static> TabView<K> {
@@ -84,6 +85,7 @@ impl<K: Hash + Eq + Copy + 'static> TabView<K> {
             map: HashMap::new(),
             key_order: Vec::new(),
             bar_rx: None,
+            active_key_tx: None,
         }
     }
 
@@ -91,6 +93,15 @@ impl<K: Hash + Eq + Copy + 'static> TabView<K> {
     /// If the tab id is not known, an error is returned and no action is performed.
     pub fn set_tab(&mut self, id: K) -> Result<(), ()> {
         if self.map.contains_key(&id) {
+            if let Some(sender) = &self.active_key_tx {
+                match sender.send(id) {
+                    Ok(_) => {}
+                    Err(e) => debug!(
+                        "error occured while trying to send new active key to sender: {}",
+                        e
+                    ),
+                }
+            }
             self.current_id = Some(id);
             Ok(())
         } else {
@@ -211,6 +222,7 @@ impl<K: Hash + Eq + Copy + 'static> View for TabView<K> {
     }
 
     fn call_on_any<'a>(&mut self, slt: &Selector, cb: AnyCb<'a>) {
+        // TODO Iterate over all keys
         if let Some(key) = &self.current_id {
             if let Some(view) = self.map.get_mut(&key) {
                 view.call_on_any(slt, cb);

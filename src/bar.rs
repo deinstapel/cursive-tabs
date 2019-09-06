@@ -1,5 +1,6 @@
-use crossbeam::Sender;
+use crossbeam::{Receiver, Sender};
 use cursive::event::{Event, EventResult, Key, MouseButton, MouseEvent};
+use cursive::theme::{Effect, PaletteColor};
 use cursive::view::{View, ViewWrapper};
 use cursive::views::Button;
 use cursive::{wrap_impl, Printer, Vec2};
@@ -7,49 +8,55 @@ use log::debug;
 use std::fmt::Display;
 use std::hash::Hash;
 
-pub struct TabBar {
-    children: Vec<PositionWrap<Button>>,
-    // List of accumulated sizes of prev buttons
-    sizes: Vec<Vec2>,
-    idx: Option<usize>,
-}
-
-pub trait Bar {
-    fn add_button<K: Hash + Eq + Copy + Display + 'static>(&mut self, tx: Sender<K>, key: K);
+pub trait Bar<K: Hash + Eq + Copy + Display + 'static> {
+    fn add_button(&mut self, tx: Sender<K>, key: K);
 }
 
 // Quick Wrapper around Views to be able to set their positon
-struct PositionWrap<T: View> {
+struct PositionWrap<T: View, K> {
     view: T,
     pub pos: Vec2,
+    pub active: bool,
+    pub key: K,
 }
 
-impl<T: View> ViewWrapper for PositionWrap<T> {
+impl<T: View, K: 'static> ViewWrapper for PositionWrap<T, K> {
     wrap_impl!(self.view: T);
 }
 
-impl<T: View> PositionWrap<T> {
-    pub fn new(view: T) -> Self {
+impl<T: View, K> PositionWrap<T, K> {
+    pub fn new(view: T, key: K) -> Self {
         Self {
             view,
             pos: Vec2::zero(),
+            active: false,
+            key,
         }
     }
 }
 
-impl TabBar {
-    pub fn new() -> Self {
+pub struct TabBar<K: Hash + Eq + Copy + Display + 'static> {
+    children: Vec<PositionWrap<Button, K>>,
+    // List of accumulated sizes of prev buttons
+    sizes: Vec<Vec2>,
+    idx: Option<usize>,
+    rx: Receiver<K>,
+}
+
+impl<K: Hash + Eq + Copy + Display + 'static> TabBar<K> {
+    pub fn new(rx: Receiver<K>) -> Self {
         Self {
             children: Vec::new(),
             sizes: Vec::new(),
             idx: None,
+            rx,
         }
     }
 }
 
-impl Bar for TabBar {
-    fn add_button<K: Hash + Eq + Copy + Display + 'static>(&mut self, tx: Sender<K>, key: K) {
-        let button = Button::new_raw(format!("│{}│", key), move |_| {
+impl<K: Hash + Eq + Copy + Display + 'static> Bar<K> for TabBar<K> {
+    fn add_button(&mut self, tx: Sender<K>, key: K) {
+        let button = Button::new_raw(format!(" {} ", key), move |_| {
             debug!("send {}", key);
             match tx.send(key) {
                 Ok(_) => {}
@@ -58,14 +65,17 @@ impl Bar for TabBar {
                 }
             }
         });
-        self.children.push(PositionWrap::new(button));
+        self.children.push(PositionWrap::new(button, key));
         self.idx = Some(self.children.len() - 1);
     }
 }
 
-impl View for TabBar {
+impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
     fn draw(&self, printer: &Printer) {
-        // Horizontal split for children
+        // First draw the complete horizontal line
+        printer.print_hline((0, 0), printer.size.x, "─");
+        printer.print((0, 0), "┌");
+        printer.print((printer.size.x - 1, 0), "┐");
         let mut count = 0;
         for child in &self.children {
             // There is no chainable api...
@@ -78,15 +88,62 @@ impl View for TabBar {
                         .fold(Vec2::new(0, 0), |acc, x| acc.stack_horizontal(x))
                         .keep_x(),
                 )
-                .cropped(self.sizes[count]);
-            // Set of focus to be focus even if the bar itself is not
-            if let Some(focus) = self.idx {
-                print.enabled = focus == count;
+                // Spacing for first character
+                .offset((count * 1, 0))
+                // Spacing for padding
+                .offset((1, 0))
+                .cropped({
+                    if count == 0 || count == self.children.len() - 1 {
+                        self.sizes[count].stack_horizontal(&Vec2::new(2, 1))
+                    } else {
+                        self.sizes[count].stack_horizontal(&Vec2::new(1, 1))
+                    }
+                });
+            let mut theme = printer.theme.clone();
+
+            if !child.active {
+                let color = theme.palette[PaletteColor::TitleSecondary];
+                theme.palette[PaletteColor::Primary] = color;
+            } else {
+                let color = theme.palette[PaletteColor::TitlePrimary];
+                theme.palette[PaletteColor::Primary] = color;
             }
-            count += 1;
+
+            if let Some(focus) = self.idx {
+                print = print.focused(focus == count);
+            }
+
             debug!("Printer for Button: is {:?}", print.size);
             debug!("With offset: {:?}", print.offset);
-            child.draw(&print);
+
+            print.with_theme(&theme, |printer| {
+                if count > 0 {
+                    if child.active || self.children[count - 1].active {
+                        printer.print((0, 0), "┃")
+                    } else {
+                        printer.print((0, 0), "│");
+                    }
+                } else {
+                    if child.active {
+                        printer.print((0, 0), "┨")
+                    } else {
+                        printer.print((0, 0), "┤");
+                    }
+                }
+                printer.with_effect(Effect::Bold, |printer| child.draw(&printer.offset((1, 0))));
+                if count == self.children.len() - 1 {
+                    if child.active {
+                        printer
+                            .offset((1, 0))
+                            .print(self.sizes[count].keep_x(), "┠");
+                    } else {
+                        printer
+                            .offset((1, 0))
+                            .print(self.sizes[count].keep_x(), "├");
+                    }
+                }
+            });
+            count += 1;
         }
     }
 
@@ -97,6 +154,15 @@ impl View for TabBar {
     }
 
     fn required_size(&mut self, cst: Vec2) -> Vec2 {
+        if let Ok(new_active) = self.rx.try_recv() {
+            for child in &mut self.children {
+                if new_active == child.key {
+                    child.active = true;
+                } else {
+                    child.active = false;
+                }
+            }
+        }
         self.sizes.clear();
         let mut start = Vec2::zero();
         for child in &mut self.children {
@@ -105,14 +171,20 @@ impl View for TabBar {
             child.pos = start;
             self.sizes.push(size);
         }
-        self.sizes
-            .clone()
-            .iter()
-            .fold(Vec2::new(0, 0), |acc, x| acc.stack_horizontal(x))
+
+        // Return max width and maximum height of child
+        Vec2::new(
+            cst.x,
+            self.sizes.iter().fold(0, |mut val, x| {
+                if val < x.y {
+                    val = x.y;
+                }
+                val
+            }),
+        )
     }
 
     fn on_event(&mut self, evt: Event) -> EventResult {
-        // TODO Mouse Events for all children
         match evt.clone() {
             Event::Mouse {
                 offset,
@@ -121,9 +193,22 @@ impl View for TabBar {
             } => {
                 let mut iter = self.children.iter().peekable();
                 let mut count = 0;
+                println!("mouse_pos: {:?}", position - offset);
                 while let Some(child) = iter.next() {
                     if position.checked_sub(offset).is_some() {
-                        if child.pos.fits(position - offset) {
+                        if (child.pos
+                            + Vec2::new(
+                                {
+                                    if count * 2 > 0 {
+                                        count * 2
+                                    } else {
+                                        1
+                                    }
+                                },
+                                0,
+                            ))
+                        .fits(position - offset)
+                        {
                             debug!("hit");
                             match event {
                                 MouseEvent::Release(MouseButton::Left) => {
