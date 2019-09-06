@@ -160,17 +160,38 @@ impl<K: Hash + Eq + Copy + 'static> TabView<K> {
         self.key_order.clone()
     }
 
-    pub fn next(&mut self) {
-        if let Some(cur_key) = &self.current_id {
-            let mut count = 0;
-            for key in &self.key_order {
-                if key != cur_key {
-                    count += 1;
-                } else {
-                    break
-                }
+    // Returns the index of the key, length of the vector if the key is not included
+    // This can be done with out sorting
+    fn index_key(cur_key: &K, key_order: &Vec<K>) -> usize {
+        let mut count: usize = 0;
+        for key in key_order {
+            if *key != *cur_key {
+                count += 1;
+            } else {
+                break;
             }
-            self.set_tab(self.key_order[(count + 1) % self.key_order.len()]).expect("Key content changed during operation, this should not happen");
+        }
+        count
+    }
+
+    pub fn next(&mut self) {
+        if let Some(cur_key) = self.current_id {
+            self.set_tab(
+                self.key_order
+                    [(Self::index_key(&cur_key, &self.key_order) + 1) % self.key_order.len()],
+            )
+            .expect("Key content changed during operation, this should not happen");
+        }
+    }
+
+    pub fn prev(&mut self) {
+        if let Some(cur_key) = self.current_id {
+            self.set_tab(
+                self.key_order[(self.key_order.len() + Self::index_key(&cur_key, &self.key_order)
+                    - 1)
+                    % self.key_order.len()],
+            )
+            .expect("Key content changed during operation, this should not happen");
         }
     }
 }

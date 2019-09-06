@@ -15,11 +15,19 @@ fn main() {
     siv.add_layer(
         LinearLayout::vertical()
             .child(panel.with_id("Tabs").fixed_size((30, 20)))
-            .child(Button::new("Next", |siv| {
-                let mut tabs: cursive::views::ViewRef<TabPanel<i32>> =
-                    siv.find_id("Tabs").expect("id not found");
-                tabs.next();
-            })),
+            .child(
+                LinearLayout::horizontal()
+                    .child(Button::new("Prev", |siv| {
+                        let mut tabs: cursive::views::ViewRef<TabPanel<i32>> =
+                            siv.find_id("Tabs").expect("id not found");
+                        tabs.prev();
+                    }))
+                    .child(Button::new("Next", |siv| {
+                        let mut tabs: cursive::views::ViewRef<TabPanel<i32>> =
+                            siv.find_id("Tabs").expect("id not found");
+                        tabs.next();
+                    })),
+            ),
     );
 
     siv.add_global_callback('q', |siv| siv.quit());

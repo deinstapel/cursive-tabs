@@ -67,6 +67,10 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabPanel<K> {
     pub fn next(&mut self) {
         self.tabs.next()
     }
+
+    pub fn prev(&mut self) {
+        self.tabs.prev()
+    }
 }
 
 impl<K: Hash + Eq + Copy + std::fmt::Display + 'static> View for TabPanel<K> {
