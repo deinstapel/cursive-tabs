@@ -18,8 +18,7 @@ fn main() {
             .child(Button::new("Next", |siv| {
                 let mut tabs: cursive::views::ViewRef<TabPanel<i32>> =
                     siv.find_id("Tabs").expect("id not found");
-                let pos = (tabs.tab().unwrap() + 1) % 4;
-                tabs.set_tab(pos).expect("Switch refused");
+                tabs.next();
             })),
     );
 

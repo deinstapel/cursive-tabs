@@ -63,6 +63,10 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabPanel<K> {
     pub fn get_tab_order(&self) -> Vec<K> {
         self.tabs.get_tab_order()
     }
+
+    pub fn next(&mut self) {
+        self.tabs.next()
+    }
 }
 
 impl<K: Hash + Eq + Copy + std::fmt::Display + 'static> View for TabPanel<K> {

@@ -142,6 +142,7 @@ impl<K: Hash + Eq + Copy + 'static> TabView<K> {
                     self.current_id = None;
                 }
             }
+            // remove_key experimental
             self.key_order = self
                 .key_order
                 .iter()
@@ -157,6 +158,20 @@ impl<K: Hash + Eq + Copy + 'static> TabView<K> {
     /// When you're implementing your own tab bar, be aware that this is the current tab bar and is only a copy of the original order, modification will not be transferred and future updates in the original not displayed.
     pub fn get_tab_order(&self) -> Vec<K> {
         self.key_order.clone()
+    }
+
+    pub fn next(&mut self) {
+        if let Some(cur_key) = &self.current_id {
+            let mut count = 0;
+            for key in &self.key_order {
+                if key != cur_key {
+                    count += 1;
+                } else {
+                    break
+                }
+            }
+            self.set_tab(self.key_order[(count + 1) % self.key_order.len()]).expect("Key content changed during operation, this should not happen");
+        }
     }
 }
 
