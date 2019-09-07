@@ -1,4 +1,5 @@
 use crossbeam::{unbounded, Receiver, Sender};
+use cursive::align::HAlign;
 use cursive::direction::{Absolute, Direction};
 use cursive::event::{AnyCb, Event, EventResult, Key};
 use cursive::view::{Selector, View};
@@ -19,6 +20,7 @@ pub struct TabPanel<K: Hash + Eq + Display + Copy + 'static> {
     tabs: TabView<K>,
     active_rx: Receiver<K>,
     bar_focused: bool,
+    bar_h_align: HAlign,
 }
 
 impl<K: Hash + Eq + Copy + Display + 'static> TabPanel<K> {
@@ -36,6 +38,7 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabPanel<K> {
             tx,
             active_rx,
             bar_focused: false,
+            bar_h_align: HAlign::Left,
         }
     }
 
@@ -70,6 +73,20 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabPanel<K> {
 
     pub fn prev(&mut self) {
         self.tabs.prev()
+    }
+
+    pub fn with_bar_align(mut self, align: HAlign) -> Self {
+        self.bar_h_align = align;
+        self
+    }
+
+    // Workaround, neither clone or copy implemented for HAlign
+    fn clone_align(align: &HAlign) -> HAlign {
+        match align {
+            HAlign::Center => HAlign::Center,
+            HAlign::Left => HAlign::Left,
+            HAlign::Right => HAlign::Right,
+        }
     }
 }
 
@@ -108,7 +125,8 @@ impl<K: Hash + Eq + Copy + std::fmt::Display + 'static> View for TabPanel<K> {
     fn required_size(&mut self, cst: Vec2) -> Vec2 {
         if self.order != self.get_tab_order() {
             debug!("rebuild time!");
-            self.bar = TabBar::new(self.active_rx.clone());
+            self.bar = TabBar::new(self.active_rx.clone())
+                .with_h_align(Self::clone_align(&self.bar_h_align));
             for key in self.get_tab_order() {
                 self.bar.add_button(self.tx.clone(), key);
             }

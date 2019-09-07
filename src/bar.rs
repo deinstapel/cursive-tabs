@@ -1,4 +1,5 @@
 use crossbeam::{Receiver, Sender};
+use cursive::align::HAlign;
 use cursive::event::{Event, EventResult, Key, MouseButton, MouseEvent};
 use cursive::theme::{Effect, PaletteColor};
 use cursive::view::{View, ViewWrapper};
@@ -37,6 +38,9 @@ impl<T: View, K> PositionWrap<T, K> {
 
 pub struct TabBar<K: Hash + Eq + Copy + Display + 'static> {
     children: Vec<PositionWrap<Button, K>>,
+    bar_size: Vec2,
+    h_align: HAlign,
+    last_rendered_size: Vec2,
     // List of accumulated sizes of prev buttons
     sizes: Vec<Vec2>,
     idx: Option<usize>,
@@ -49,8 +53,20 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabBar<K> {
             children: Vec::new(),
             sizes: Vec::new(),
             idx: None,
+            h_align: HAlign::Left,
+            bar_size: Vec2::zero(),
+            last_rendered_size: Vec2::zero(),
             rx,
         }
+    }
+
+    pub fn with_h_align(mut self, align: HAlign) -> Self {
+        self.h_align = align;
+        self
+    }
+
+    pub fn set_h_align(&mut self, align: HAlign) {
+        self.h_align = align;
     }
 }
 
@@ -77,11 +93,23 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
         printer.print((0, 0), "┌");
         printer.print((printer.size.x - 1, 0), "┐");
         let mut count = 0;
+        // Spacing for padding & crop end
+        let inner_printer = printer
+            .offset((1, 0))
+            // Alignment
+            .offset((
+                self.h_align.get_offset(
+                    self.bar_size.x + self.children.len() + 1,
+                    printer.size.x - 2,
+                ),
+                0,
+            ))
+            .cropped((printer.size.x - 2, printer.size.y));
         for child in &self.children {
             // There is no chainable api...
             let mut rel_sizes = self.sizes.clone();
             rel_sizes.truncate(count);
-            let mut print = printer
+            let mut print = inner_printer
                 .offset(
                     rel_sizes
                         .iter()
@@ -90,8 +118,6 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
                 )
                 // Spacing for first character
                 .offset((count * 1, 0))
-                // Spacing for padding
-                .offset((1, 0))
                 .cropped({
                     if count == 0 || count == self.children.len() - 1 {
                         self.sizes[count].stack_horizontal(&Vec2::new(2, 1))
@@ -112,9 +138,6 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
             if let Some(focus) = self.idx {
                 print = print.focused(focus == count);
             }
-
-            debug!("Printer for Button: is {:?}", print.size);
-            debug!("With offset: {:?}", print.offset);
 
             print.with_theme(&theme, |printer| {
                 if count > 0 {
@@ -147,10 +170,11 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
         }
     }
 
-    fn layout(&mut self, _vec: Vec2) {
+    fn layout(&mut self, vec: Vec2) {
         for (child, size) in self.children.iter_mut().zip(self.sizes.iter()) {
             child.layout(*size);
         }
+        self.last_rendered_size = vec;
     }
 
     fn required_size(&mut self, cst: Vec2) -> Vec2 {
@@ -171,7 +195,8 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
             child.pos = start;
             self.sizes.push(size);
         }
-
+        // Total size of bar
+        self.bar_size = start;
         // Return max width and maximum height of child
         Vec2::new(
             cst.x,
@@ -193,7 +218,6 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
             } => {
                 let mut iter = self.children.iter().peekable();
                 let mut count = 0;
-                println!("mouse_pos: {:?}", position - offset);
                 while let Some(child) = iter.next() {
                     if position.checked_sub(offset).is_some() {
                         if (child.pos
@@ -205,6 +229,13 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
                                         1
                                     }
                                 },
+                                0,
+                            )
+                            + Vec2::new(
+                                self.h_align.get_offset(
+                                    self.bar_size.x + self.children.len() + 1,
+                                    self.last_rendered_size.x - 2,
+                                ),
                                 0,
                             ))
                         .fits(position - offset)
