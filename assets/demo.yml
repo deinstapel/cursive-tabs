@@ -101,9 +101,9 @@ config:
       cyan: "#708387"
       white: "#d5d5d0"
       brightBlack: "#626566"
-      brightRed: "#ff7fac"
-      brightGreen: "#c8ed71"
-      brightYellow: "#ebdf86"
+      brightRed: "#8b0000"
+      brightGreen: "#ffa727"
+      brightYellow: "#ffa727"
       brightBlue: "#75dff2"
       brightMagenta: "#ae89fe"
       brightCyan: "#b1c6ca"
@@ -111,15 +111,47 @@ config:
   
 # Records, feel free to edit them
 records:
-  - delay: 373
-    content: "\e[?1049h\e[22;0;0t\e[1;24r\e(B\e[m\e[4l\e[?7h\e[?1h\e=\e[?1006;1000h\e[39;49m\e[?25l\e[?1002h\e[39;49m\e[34m\e[44m\e[H\e[2J\e[16d\e[J\e[H\e[K\n\e[K\n\e[K\n\e[K\n\e[K\n\e[K\n\e[K\n\e[K\n\e[K\e[10;26H\e[1K \e[30m\e[47m┌─────────────────────────┐\e[34m\e[44m\e[K\e[11;26H\e[1K \e[30m\e[47m│ This is the first view! │\e[30m\e[40m \e[34m\e[44m\e[K\e[12;26H\e[1K \e[30m\e[47m│\e[25X\e[12;53H│\e[30m\e[40m \e[34m\e[44m\e[K\e[13;26H\e[1K \e[30m\e[47m│\e[18X\e[13;46H\e[37m\e[41m<Next>\e[30m\e[47m │\e[30m\e[40m \e[34m\e[44m\e[K\e[14;26H\e[1K \e[30m\e[47m└─────────────────────────┘\e[30m\e[40m \e[34m\e[44m\e[K\e[15;27H\e[1K \e[30m\e[40m\e[27X\e[15;55H\e[34m\e[44m\e[K\e[13d\b\e[39;49m\e(B\e[m"
-  - delay: 1807
-    content: "\e[34m\e[44m\e[H\e[2J\e[16d\e[J\e[H\e[K\n\e[K\n\e[K\n\e[K\n\e[K\n\e[K\n\e[K\n\e[K\n\e[K\e[10;26H\e[1K \e[30m\e[47m┌──────────────────────────┐\e[34m\e[44m\e[K\e[11;26H\e[1K \e[30m\e[47m│ This is the second view! │\e[30m\e[40m \e[34m\e[44m\e[K\e[12;26H\e[1K \e[30m\e[47m│\e[26X\e[12;54H│\e[30m\e[40m \e[34m\e[44m\e[K\e[13;26H\e[1K \e[30m\e[47m│\e[19X\e[13;47H\e[37m\e[41m<Next>\e[30m\e[47m │\e[30m\e[40m \e[34m\e[44m\e[K\e[14;26H\e[1K \e[30m\e[47m└──────────────────────────┘\e[30m\e[40m \e[34m\e[44m\e[K\e[15;27H\e[1K \e[30m\e[40m\e[28X\e[15;56H\e[34m\e[44m\e[K\e[13d\b\e[39;49m\e(B\e[m"
-  - delay: 1149
-    content: "\e[34m\e[44m\e[H\e[2J\e[16d\e[J\e[H\e[K\n\e[K\n\e[K\n\e[K\n\e[K\n\e[K\n\e[K\n\e[K\n\e[K\e[10;26H\e[1K \e[30m\e[47m┌─────────────────────────┐\e[34m\e[44m\e[K\e[11;26H\e[1K \e[30m\e[47m│ This is the third view! │\e[30m\e[40m \e[34m\e[44m\e[K\e[12;26H\e[1K \e[30m\e[47m│\e[25X\e[12;53H│\e[30m\e[40m \e[34m\e[44m\e[K\e[13;26H\e[1K \e[30m\e[47m│\e[18X\e[13;46H\e[37m\e[41m<Next>\e[30m\e[47m │\e[30m\e[40m \e[34m\e[44m\e[K\e[14;26H\e[1K \e[30m\e[47m└─────────────────────────┘\e[30m\e[40m \e[34m\e[44m\e[K\e[15;27H\e[1K \e[30m\e[40m\e[27X\e[15;55H\e[34m\e[44m\e[K\e[13d\b\e[39;49m\e(B\e[m"
-  - delay: 1119
-    content: "\e[34m\e[44m\e[H\e[2J\e[16d\e[J\e[H\e[K\n\e[K\n\e[K\n\e[K\n\e[K\n\e[K\n\e[K\n\e[K\n\e[K\e[10;26H\e[1K \e[30m\e[47m┌──────────────────────────┐\e[34m\e[44m\e[K\e[11;26H\e[1K \e[30m\e[47m│ This is the fourth view! │\e[30m\e[40m \e[34m\e[44m\e[K\e[12;26H\e[1K \e[30m\e[47m│\e[26X\e[12;54H│\e[30m\e[40m \e[34m\e[44m\e[K\e[13;26H\e[1K \e[30m\e[47m│\e[19X\e[13;47H\e[37m\e[41m<Next>\e[30m\e[47m │\e[30m\e[40m \e[34m\e[44m\e[K\e[14;26H\e[1K \e[30m\e[47m└──────────────────────────┘\e[30m\e[40m \e[34m\e[44m\e[K\e[15;27H\e[1K \e[30m\e[40m\e[28X\e[15;56H\e[34m\e[44m\e[K\e[13d\b\e[39;49m\e(B\e[m"
-  - delay: 1543
-    content: "\e[34m\e[44m\e[H\e[2J\e[16d\e[J\e[H\e[K\n\e[K\n\e[K\n\e[K\n\e[K\n\e[K\n\e[K\n\e[K\n\e[K\e[10;26H\e[1K \e[30m\e[47m┌─────────────────────────┐\e[34m\e[44m\e[K\e[11;26H\e[1K \e[30m\e[47m│ This is the first view! │\e[30m\e[40m \e[34m\e[44m\e[K\e[12;26H\e[1K \e[30m\e[47m│\e[25X\e[12;53H│\e[30m\e[40m \e[34m\e[44m\e[K\e[13;26H\e[1K \e[30m\e[47m│\e[18X\e[13;46H\e[37m\e[41m<Next>\e[30m\e[47m │\e[30m\e[40m \e[34m\e[44m\e[K\e[14;26H\e[1K \e[30m\e[47m└─────────────────────────┘\e[30m\e[40m \e[34m\e[44m\e[K\e[15;27H\e[1K \e[30m\e[40m\e[27X\e[15;55H\e[34m\e[44m\e[K\e[13d\b\e[39;49m\e(B\e[m"
-  - delay: 1360
+  - delay: 413
+    content: "\e[?1049h\e[22;0;0t\e[1;24r\e(B\e[m\e[4l\e[?7h\e[?1h\e=\e[?1006;1000h\e[39;49m\e[?25l\e[?1002h\e[39;49m\e[34m\e[44m\e[H\e[2J\e[19d\e[J\e[H\e[K\n\e[K\n\e[K\n\e[K\n\e[K\n\e[K\e[7;15H\e[1K \e[30m\e[47m┌───────────────────────────┨\e(B\e[0;1m\e[31m\e[47m 0 \e(B\e[0m\e[30m\e[47m┃\e(B\e[0;1m\e[33m\e[47m 1 \e(B\e[0m\e[30m\e[47m│\e(B\e[0;1m\e[33m\e[47m 2 \e(B\e[0m\e[30m\e[47m│\e(B\e[0;1m\e[33m\e[47m 3 \e(B\e[0m\e[30m\e[47m│\e(B\e[0;1m\e[37m\e[41m 4 \e(B\e[0m\e[30m\e[47m├┐\e[34m\e[44m\e[K\e[8;15H\e[1K \e[30m\e[47m│With using the TabPanel you get a TabView and   │\e[30m\e[40m \e[34m\e[44m\e[K\e[9;15H\e[1K \e[30m\e[47m│TabBar, preconfigured for you to use!           │\e[30m\e[40m \e[34m\e[44m\e[K\e[10;15H\e[1K \e[30m\e[47m│Simply create it with:\e[26X\e[10;65H│\e[30m\e[40m \e[34m\e[44m\e[K\e[11;15H\e[1K \e[30m\e[47m│\e[48X\e[11;65H│\e[30m\e[40m \e[34m\e[44m\e[K\e[12;15H\e[1K \e[30m\e[47m│`cursive_tabs::TabPanel::new()`\e[17X\e[12;65H│\e[30m\e[40m \e[34m\e[44m\e[K\e[13;15H\e[1K \e[30m\e[47m│\e[48X\e[13;65H│\e[30m\e[40m \e[34m\e[44m\e[K\e[14;15H\e[1K \e[30m\e[47m│\e[48X\e[14;65H│\e[30m\e[40m \e[34m\e[44m\e[K\e[15;15H\e[1K \e[30m\e[47m│\e[48X\e[15;65H│\e[30m\e[40m \e[34m\e[44m\e[K\e[16;15H\e[1K \e[30m\e[47m└────────────────────────────────────────────────┘\e[30m\e[40m \e[34m\e[44m\e[K\e[17;15H\e[1K \e[30m\e[47m<Prev><Next>\e[38X\e[17;66H\e[30m\e[40m \e[34m\e[44m\e[K\e[18;16H\e[1K \e[30m\e[40m\e[50X\e[18;67H\e[34m\e[44m\e[K\e[17;28H\e[39;49m\e(B\e[m"
+  - delay: 1050
+    content: "\e[7;57H\e(B\e[0;1m\e[37m\e[41m 3 \e(B\e[0m\e[30m\e[47m│\e(B\e[0;1m\e[33m\e[47m 4 \e[17;28H\e[39;49m\e(B\e[m"
+  - delay: 153
+    content: "\e[7;53H\e(B\e[0;1m\e[37m\e[41m 2 \e(B\e[0m\e[30m\e[47m│\e(B\e[0;1m\e[33m\e[47m 3 \e[17;28H\e[39;49m\e(B\e[m"
+  - delay: 154
+    content: "\e[7;49H\e(B\e[0;1m\e[37m\e[41m 1 \e(B\e[0m\e[30m\e[47m│\e(B\e[0;1m\e[33m\e[47m 2 \e[17;28H\e[39;49m\e(B\e[m"
+  - delay: 666
+    content: "\e[7;44H\e[30m\e[47m┤\e(B\e[0;1m\e[33m\e[47m 0 \e(B\e[0m\e[30m\e[47m┃\e(B\e[0;1m\e[37m\e[41m 1 \e(B\e[0m\e[30m\e[47m┃\e[8;17HYou then can add views and configure your panel.\e[9;17H\e[37X\n\e[22X\n\n\e[31X\e[17;28H\e[39;49m\e(B\e[m"
+  - delay: 1000
+    content: "\e[7;49H\e(B\e[0;1m\e[31m\e[47m 1 \e(B\e[0m\e[30m\e[47m┃\e(B\e[0;1m\e[37m\e[41m 2 \e[17;28H\e[39;49m\e(B\e[m"
+  - delay: 1000
+    content: "\e[7;48H\e[30m\e[47m│\e(B\e[0;1m\e[33m\e[47m 1 \e(B\e[0m\e[30m\e[47m┃\e(B\e[0;1m\e[37m\e[41m 2 \e(B\e[0m\e[30m\e[47m┃\e[8;17HOfcourse you can also use the provided TabView  \e[9;17Hwithout the panel, simply create it with:\e[11;17H`cursive_tabs::TabView::new()`\e[17;28H\e[39;49m\e(B\e[m"
+  - delay: 1000
+    content: "\e[7;53H\e(B\e[0;1m\e[31m\e[47m 2 \e(B\e[0m\e[30m\e[47m┃\e(B\e[0;1m\e[37m\e[41m 3 \e[17;28H\e[39;49m\e(B\e[m"
+  - delay: 1000
+    content: "\e[7;52H\e[30m\e[47m│\e(B\e[0;1m\e[33m\e[47m 2 \e(B\e[0m\e[30m\e[47m┃\e(B\e[0;1m\e[37m\e[41m 3 \e(B\e[0m\e[30m\e[47m┃\e[8;17HAll you have to do is add:\e[20X\e[9;17H\e[41X\ncursive-tabs = \"0^\"\e[11;17H\e[30X\nto your Cargo.toml!\e[17;28H\e[39;49m\e(B\e[m"
+  - delay: 1000
+    content: "\e[7;57H\e(B\e[0;1m\e[31m\e[47m 3 \e(B\e[0m\e[30m\e[47m┃\e(B\e[0;1m\e[37m\e[41m 4 \e[17;28H\e[39;49m\e(B\e[m"
+  - delay: 1000
+    content: "\e[7;56H\e[30m\e[47m│\e(B\e[0;1m\e[33m\e[47m 3 \e(B\e[0m\e[30m\e[47m┃\e(B\e[0;1m\e[37m\e[41m 4 \e(B\e[0m\e[30m\e[47m┠\e[8;17H\e[26X\n  \e(B\e[0;7m\e[34m\e[47m                                            \e[10;17H\e(B\e[0m\e[30m\e[47m  \e(B\e[0;7m\e[34m\e[47m                                            \e[11;19H                                            \e[12;17H\e(B\e[0m\e[30m\e[47m  \e(B\e[0;7m\e[34m\e[47m                                            \e[13;19H                                            \e[14;19H                                            \e[17;28H\e[39;49m\e(B\e[m"
+  - delay: 1000
+    content: "\e[7;61H\e(B\e[0;1m\e[31m\e[47m 4 \e[9;19H\e(B\e[0m\e[34m\e[47m_\e[17;28H\e[39;49m\e(B\e[m"
+  - delay: 50
+    content: "\e[9;19H\e(B\e[0;7m\e[34m\e[47mH\e(B\e[0m\e[34m\e[47m_\e[17;28H\e[39;49m\e(B\e[m"
+  - delay: 50
+    content: "\e[9;20H\e(B\e[0;7m\e[34m\e[47ma\e(B\e[0m\e[34m\e[47m_\e[17;28H\e[39;49m\e(B\e[m"
+  - delay: 50
+    content: "\e[9;21H\e(B\e[0;7m\e[34m\e[47mv\e(B\e[0m\e[34m\e[47m_\e[17;28H\e[39;49m\e(B\e[m"
+  - delay: 50
+    content: "\e[9;22H\e(B\e[0;7m\e[34m\e[47me\e(B\e[0m\e[34m\e[47m_\e[17;28H\e[39;49m\e(B\e[m"
+  - delay: 50
+    content: "\e[9;23H\e(B\e[0;7m\e[34m\e[47m \e(B\e[0m\e[34m\e[47m_\e[17;28H\e[39;49m\e(B\e[m"
+  - delay: 50
+    content: "\e[9;24H\e(B\e[0;7m\e[34m\e[47mf\e(B\e[0m\e[34m\e[47m_\e[17;28H\e[39;49m\e(B\e[m"
+  - delay: 50
+    content: "\e[9;25H\e(B\e[0;7m\e[34m\e[47mu\e(B\e[0m\e[34m\e[47m_\e[17;28H\e[39;49m\e(B\e[m"
+  - delay: 50
+    content: "\e[9;26H\e(B\e[0;7m\e[34m\e[47mn\e(B\e[0m\e[34m\e[47m_\e[17;28H\e[39;49m\e(B\e[m"
+  - delay: 50
+    content: "\e[9;27H\e(B\e[0;7m\e[34m\e[47m!\e(B\e[0m\e[34m\e[47m_\e[17;28H\e[39;49m\e(B\e[m"
+  - delay: 2204
     content: "\e[?1002l\e[?1006;1000l\e[24;1H\e[?12l\e[?25h\e[?1049l\e[23;0;0t\r\e[?1l\e>"

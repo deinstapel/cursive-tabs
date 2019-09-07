@@ -7,16 +7,27 @@ use cursive_tabs::TabPanel;
 fn main() {
     let mut siv = Cursive::default();
     let mut panel = TabPanel::new()
-        .with_view(0, TextView::new("This is one of the first views, definetly not the last. There will be more to come in due time, but at the moment that is all we have, but in the future there shall be plenty more!"))
-        .with_view(1, PaddedView::new((2,2,1,1),TextArea::new()))
-        .with_view(2, TextView::new("This is the third view!"))
-        .with_view(3, TextView::new("This is the fourth view!"))
+        .with_view(0, TextView::new("With using the TabPanel you get a TabView and TabBar, preconfigured for you to use!
+Simply create it with:
+
+`cursive_tabs::TabPanel::new()`"))
+        .with_view(1, TextView::new("You then can add views and configure your panel."))
+        .with_view(2, TextView::new("Ofcourse you can also use the provided TabView without the panel, simply create it with:
+
+`cursive_tabs::TabView::new()`"))
+.with_view(3, TextView::new("All you have to do is add:
+
+cursive-tabs = \"0^\"
+
+to your Cargo.toml!
+"))
+        .with_view(4, PaddedView::new((2,2,1,1),TextArea::new()))
         .with_bar_align(HAlign::Right);
     panel.set_tab(0).expect("oh no");
 
     siv.add_layer(
         LinearLayout::vertical()
-            .child(panel.with_id("Tabs").fixed_size((30, 20)))
+            .child(panel.with_id("Tabs").fixed_size((50, 10)))
             .child(
                 LinearLayout::horizontal()
                     .child(Button::new("Prev", |siv| {
