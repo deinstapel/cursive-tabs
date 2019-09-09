@@ -12,6 +12,22 @@ use crate::Bar;
 use crate::TabBar;
 use crate::TabView;
 
+/// The `TabPanel` is an ease of use wrapper around a `TabView` and its `TabBar`.
+/// Additionally the TabBar in the Panel can be horizontally aligned, by default it is set to be left aligned.
+///
+/// # Example
+/// ```
+/// use cursive_tabs::TabPanel;
+/// use cursive::views::TextView;
+/// use cursive::align::HAlign;
+///
+/// let mut tabs = TabPanel::new()
+///       .with_tab("First", TextView::new("First"))
+///       .with_tab("Second", TextView::new("Second"))
+///       .with_bar_alignment(HAlign::Center);
+/// ```
+///
+/// A TabView is also usable separately, so if you prefer the tabs without the TabBar and Panel around have a look at `TabView`.
 pub struct TabPanel<K: Hash + Eq + Display + Copy + 'static> {
     order: Vec<K>,
     bar: TabBar<K>,
@@ -24,6 +40,9 @@ pub struct TabPanel<K: Hash + Eq + Display + Copy + 'static> {
 }
 
 impl<K: Hash + Eq + Copy + Display + 'static> TabPanel<K> {
+
+    /// Returns a new instance of a TabPanel.
+    /// Alignment is set by default to left, to change this use `set_bar_alignment` to change to any other `HAlign` provided by `cursive`.
     pub fn new() -> Self {
         let mut tabs = TabView::new();
         let (tx, rx) = unbounded();
@@ -42,52 +61,70 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabPanel<K> {
         }
     }
 
-    pub fn get_active_tab(&self) -> Option<K> {
-        self.tabs.get_active_tab()
+    /// Returns the current active tab of the `TabView`.
+    /// Note: Calls `active_tab` on the enclosed `TabView`.
+    pub fn active_tab(&self) -> Option<K> {
+        self.tabs.active_tab()
     }
 
+    /// Non-consuming variant to set the active tab in the `TabView`.
+    /// Note: Calls `set_active_tab` on the enclosed `TabView`.
     pub fn set_active_tab(&mut self, id: K) -> Result<(), ()> {
         self.tabs.set_active_tab(id)
     }
 
-    pub fn active_tab(mut self, id: K) -> Result<Self, ()> {
+    /// Consuming & Chainable variant to set the active tab in the `TabView`.
+    ///  Note: Calls `set_active_tab` on the enclosed `TabView`.
+    ///
+    /// Be careful! Failure in this case means the panel get dropped this has to with some trait restrictions in cursive, at the moment just avoid using the chainable variant if you are unsure that the operation will succeed.
+    pub fn with_active_tab(mut self, id: K) -> Result<Self, ()> {
+        // TODO: Return Self in error case, this is borked as of now
         self.tabs.set_active_tab(id)?;
-
         Ok(self)
     }
 
-    pub fn add_tab<T: View>(&mut self, id: K, view: T) {
+    /// Non-consuming variant to add new tabs to the `TabView`.
+    /// Note: Calls `add_tab` on the enclosed `TabView`.
+    pub fn add_tab<T: View + Send>(&mut self, id: K, view: T) {
         self.tabs.add_tab(id, view);
     }
 
-    pub fn tab<T: View>(mut self, id: K, view: T) -> Self {
+    /// Consuming & Chainable variant to add a new tab.
+    /// Note: Calls `add_tab` on the enclosed `TabView`.
+    pub fn with_tab<T: View + Send>(mut self, id: K, view: T) -> Self {
         self.tabs.add_tab(id, view);
 
         self
     }
 
+    /// Remove a tab of the enclosed `TabView`.
     pub fn remove_tab(&mut self, id: K) -> Result<(), ()> {
         self.tabs.remove_tab(id)
     }
 
+    /// Proceeds to the next view in order of addition.
     pub fn next(&mut self) {
         self.tabs.next()
     }
 
+    /// Go back to the previous view in order of addition.
     pub fn prev(&mut self) {
         self.tabs.prev()
     }
 
-    pub fn bar_alignment(mut self, align: HAlign) -> Self {
+    /// Consumable & Chainable variant to set the bar alignment.
+    pub fn with_bar_alignment(mut self, align: HAlign) -> Self {
         self.set_bar_alignment(align);
 
         self
     }
 
+    /// Non-consuming variant to set the bar alignment.
     pub fn set_bar_alignment(&mut self, align: HAlign) {
         self.bar_h_align = align;
     }
 
+    /// Returns the current order of tabs as an Vector with the keys of the views.
     pub fn tab_order(&self) -> Vec<K> {
         self.tabs.tab_order()
     }

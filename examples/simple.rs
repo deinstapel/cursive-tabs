@@ -25,13 +25,13 @@ to your Cargo.toml!
 fn main() {
     let mut siv = Cursive::default();
     let panel = TabPanel::new()
-        .tab(0, TextView::new(TAB_0))
-        .tab(1, TextView::new(TAB_1))
-        .tab(2, TextView::new(TAB_2))
-        .tab(3, TextView::new(TAB_3))
-        .tab(4, PaddedView::new((2,2,1,1),TextArea::new()))
-        .bar_alignment(HAlign::Right)
-        .active_tab(0)
+        .with_tab(0, TextView::new(TAB_0))
+        .with_tab(1, TextView::new(TAB_1))
+        .with_tab(2, TextView::new(TAB_2))
+        .with_tab(3, TextView::new(TAB_3))
+        .with_tab(4, PaddedView::new((2,2,1,1),TextArea::new()))
+        .with_bar_alignment(HAlign::Right)
+        .with_active_tab(0)
         .expect("oh no");
 
     siv.add_layer(

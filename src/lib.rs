@@ -2,7 +2,7 @@
 //! [gyscos/cursive](https://github.com/gyscos/cursive) views. It is build to
 //! be as simple as possible.
 //!
-//! The behaviour is oriented at the [`StackView`](https://docs.rs/cursive/0.13.0/cursive/views/struct.StackView.html) of cursive, but with the advantage of selectively displaying
+//! The behaviour is oriented to be similar to  [`StackView`](https://docs.rs/cursive/0.13.0/cursive/views/struct.StackView.html) of cursive, but with the advantage of selectively displaying
 //! views without needing to delete foremost one.
 //!
 //! # Example
@@ -58,7 +58,7 @@ pub use panel::TabPanel;
 /// Main struct which manages views
 pub struct TabView<K: Hash> {
     current_id: Option<K>,
-    map: HashMap<K, Box<dyn View>>,
+    map: HashMap<K, Box<dyn View + Send>>,
     key_order: Vec<K>,
     bar_rx: Option<Receiver<K>>,
     active_key_tx: Option<Sender<K>>,
@@ -92,7 +92,7 @@ impl<K: Hash + Eq + Copy + 'static> TabView<K> {
     }
 
     /// Returns the currently active tab Id.
-    pub fn get_active_tab(&self) -> Option<K> {
+    pub fn active_tab(&self) -> Option<K> {
         self.current_id
     }
 
@@ -120,7 +120,7 @@ impl<K: Hash + Eq + Copy + 'static> TabView<K> {
     /// If the tab id is not known, an error is returned and no action is performed.
     ///
     /// This is the consumable variant.
-    pub fn active_tab(mut self, id: K) -> Result<Self, ()> {
+    pub fn with_active_tab(mut self, id: K) -> Result<Self, ()> {
         self.set_active_tab(id)?;
 
         Ok(self)
@@ -128,7 +128,7 @@ impl<K: Hash + Eq + Copy + 'static> TabView<K> {
 
     /// Add a new tab to the tab view.
     /// The new tab will be set active and will be the visible tab for this tab view.
-    pub fn add_tab<T: View>(&mut self, id: K, view: T) {
+    pub fn add_tab<T: View + Send>(&mut self, id: K, view: T) {
         self.map.insert(id, Box::new(view));
         self.current_id = Some(id);
         self.key_order.push(id);
@@ -138,7 +138,7 @@ impl<K: Hash + Eq + Copy + 'static> TabView<K> {
     /// The new tab will be set active and will be the visible tab for this tab view.
     ///
     /// This is the consumable variant.
-    pub fn tab<T: View>(mut self, id: K, view: T) -> Self {
+    pub fn with_tab<T: View + Send>(mut self, id: K, view: T) -> Self {
         self.add_tab(id, view);
 
         self
@@ -324,7 +324,7 @@ mod test {
 
     #[test]
     fn insert() {
-        let mut tabs = TabView::<i32>::new().tab(0, DummyView);
+        let mut tabs = TabView::<i32>::new().with_tab(0, DummyView);
         tabs.add_tab(1, DummyView);
     }
 
@@ -333,9 +333,9 @@ mod test {
         let mut tabs = TabView::<i32>::new();
         tabs.add_tab(0, DummyView);
         tabs.add_tab(1, DummyView);
-        assert_eq!(tabs.get_active_tab().expect("Id not correct"), 1);
+        assert_eq!(tabs.active_tab().expect("Id not correct"), 1);
         tabs.set_active_tab(0).expect("Id not taken");
-        assert_eq!(tabs.get_active_tab().expect("Id not correct"), 0);
+        assert_eq!(tabs.active_tab().expect("Id not correct"), 0);
     }
 
     #[test]
@@ -344,6 +344,6 @@ mod test {
         tabs.add_tab(0, DummyView);
         tabs.add_tab(1, DummyView);
         assert_eq!(tabs.remove_tab(1), Ok(()));
-        assert!(tabs.get_active_tab().is_none());
+        assert!(tabs.active_tab().is_none());
     }
 }
