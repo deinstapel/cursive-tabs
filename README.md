@@ -55,12 +55,14 @@ use cursive::{views::TextView, Cursive};
 use cursive_tabs::TabView;
 
 let mut siv = Cursive::default();
-let tabs = TabView::new().with_view(0, TextView::new("Our first tab!"));
+let tabs = TabView::new().with_tab(0, TextView::new("Our first tab!"));
 // We can continue to add as many tabs as we want!
 
 siv.add_layer(tabs);
 siv.run();
 ```
+
+Look into the [documentation](https://docs.rs/cursive-tabs) for more examples and a detailed explanation.
 
 ## Troubleshooting
 
