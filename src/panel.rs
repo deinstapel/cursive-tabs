@@ -42,29 +42,32 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabPanel<K> {
         }
     }
 
-    pub fn insert_view<T: View>(&mut self, id: K, view: T) -> K {
-        self.tabs.insert_view(id, view)
+    pub fn get_active_tab(&self) -> Option<K> {
+        self.tabs.get_active_tab()
     }
 
-    pub fn with_view<T: View>(mut self, id: K, view: T) -> Self {
-        self.tabs.insert_view(id, view);
+    pub fn set_active_tab(&mut self, id: K) -> Result<(), ()> {
+        self.tabs.set_active_tab(id)
+    }
+
+    pub fn active_tab(mut self, id: K) -> Result<Self, ()> {
+        self.tabs.set_active_tab(id)?;
+
+        Ok(self)
+    }
+
+    pub fn add_tab<T: View>(&mut self, id: K, view: T) {
+        self.tabs.add_tab(id, view);
+    }
+
+    pub fn tab<T: View>(mut self, id: K, view: T) -> Self {
+        self.tabs.add_tab(id, view);
+
         self
     }
 
-    pub fn tab(&self) -> Option<K> {
-        self.tabs.tab()
-    }
-
-    pub fn set_tab(&mut self, id: K) -> Result<(), ()> {
-        self.tabs.set_tab(id)
-    }
-
-    pub fn remove_view(&mut self, id: K) -> Result<K, ()> {
-        self.tabs.remove_view(id)
-    }
-
-    pub fn get_tab_order(&self) -> Vec<K> {
-        self.tabs.get_tab_order()
+    pub fn remove_tab(&mut self, id: K) -> Result<(), ()> {
+        self.tabs.remove_tab(id)
     }
 
     pub fn next(&mut self) {
@@ -75,9 +78,18 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabPanel<K> {
         self.tabs.prev()
     }
 
-    pub fn with_bar_align(mut self, align: HAlign) -> Self {
-        self.bar_h_align = align;
+    pub fn bar_alignment(mut self, align: HAlign) -> Self {
+        self.set_bar_alignment(align);
+
         self
+    }
+
+    pub fn set_bar_alignment(&mut self, align: HAlign) {
+        self.bar_h_align = align;
+    }
+
+    pub fn tab_order(&self) -> Vec<K> {
+        self.tabs.tab_order()
     }
 
     // Workaround, neither clone or copy implemented for HAlign
@@ -123,14 +135,14 @@ impl<K: Hash + Eq + Copy + std::fmt::Display + 'static> View for TabPanel<K> {
     }
 
     fn required_size(&mut self, cst: Vec2) -> Vec2 {
-        if self.order != self.get_tab_order() {
+        if self.order != self.tab_order() {
             debug!("rebuild time!");
             self.bar = TabBar::new(self.active_rx.clone())
-                .with_h_align(Self::clone_align(&self.bar_h_align));
-            for key in self.get_tab_order() {
+                .h_align(Self::clone_align(&self.bar_h_align));
+            for key in self.tab_order() {
                 self.bar.add_button(self.tx.clone(), key);
             }
-            self.order = self.get_tab_order();
+            self.order = self.tab_order();
         }
         let tab_size = self.tabs.required_size(cst);
         self.bar_size = self.bar.required_size(cst);

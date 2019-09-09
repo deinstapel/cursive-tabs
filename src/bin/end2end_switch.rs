@@ -5,9 +5,10 @@ use cursive::Cursive;
 
 fn main() {
     let mut siv = Cursive::default();
-    let mut tabs = TabView::new()
-        .with_view(0, TextView::new("First"))
-        .with_view(1, TextView::new("Second"));
-    tabs.set_tab(0).expect("Setting tab has failed");
+    let tabs = TabView::new()
+        .tab(0, TextView::new("First"))
+        .tab(1, TextView::new("Second"))
+        .active_tab(0).expect("Setting tab has failed");
+    siv.add_layer(tabs);
     siv.run();
 }

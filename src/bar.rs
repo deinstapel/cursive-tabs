@@ -60,13 +60,9 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabBar<K> {
         }
     }
 
-    pub fn with_h_align(mut self, align: HAlign) -> Self {
+    pub fn h_align(mut self, align: HAlign) -> Self {
         self.h_align = align;
         self
-    }
-
-    pub fn set_h_align(&mut self, align: HAlign) {
-        self.h_align = align;
     }
 }
 

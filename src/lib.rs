@@ -1,4 +1,6 @@
-//! This crate provides a tabbing view for [gyscos/cursive](https://github.com/gyscos/cursive) views. It is build to be as simple as possible.
+//! This crate provides a tabbing view for
+//! [gyscos/cursive](https://github.com/gyscos/cursive) views. It is build to
+//! be as simple as possible.
 //!
 //! The behaviour is oriented at the [`StackView`](https://docs.rs/cursive/0.13.0/cursive/views/struct.StackView.html) of cursive, but with the advantage of selectively displaying
 //! views without needing to delete foremost one.
@@ -13,7 +15,7 @@
 //! let mut tabs = TabView::new();
 //! #   // That is all what is needed to display an empty TabView, but of course
 //! #   // you can add your own tabs now and switch them around as you want!
-//! #   tabs.insert_view("First", TextView::new("Our first view!"));
+//! #   tabs.add_tab("First", TextView::new("Our first view!"));
 //! #   siv.add_layer(Dialog::around(tabs));
 //! #   // When your done setting run cursive
 //! #   // siv.run();
@@ -31,7 +33,7 @@
 //!   let mut tabs = TabView::new();
 //!   // That is all what is needed to display an empty TabView, but of course
 //!   // you can add your own tabs now and switch them around as you want!
-//!   tabs.insert_view("First", TextView::new("Our first view!"));
+//!   tabs.add_tab("First", TextView::new("Our first view!"));
 //!   siv.add_layer(Dialog::around(tabs));
 //!   // When your done setting run cursive
 //!   // siv.run();
@@ -73,7 +75,7 @@ impl<K: Hash + Eq + Copy + 'static> TabView<K> {
     /// let mut tabs = TabView::new();
     /// #  // That is all what is needed to display an empty TabView, but of course
     /// #  // you can add your own tabs now and switch them around as you want!
-    /// #  tabs.insert_view("First", TextView::new("Our first view!"));
+    /// #  tabs.add_tab("First", TextView::new("Our first view!"));
     /// #  siv.add_layer(Dialog::around(tabs));
     /// #  // When your done setting run cursive
     /// #  // siv.run();
@@ -89,9 +91,14 @@ impl<K: Hash + Eq + Copy + 'static> TabView<K> {
         }
     }
 
-    /// Non-consuming setting of the to be active tab.
+    /// Returns the currently active tab Id.
+    pub fn get_active_tab(&self) -> Option<K> {
+        self.current_id
+    }
+
+    /// Set the currently active (visible) tab.
     /// If the tab id is not known, an error is returned and no action is performed.
-    pub fn set_tab(&mut self, id: K) -> Result<(), ()> {
+    pub fn set_active_tab(&mut self, id: K) -> Result<(), ()> {
         if self.map.contains_key(&id) {
             if let Some(sender) = &self.active_key_tx {
                 match sender.send(id) {
@@ -109,32 +116,38 @@ impl<K: Hash + Eq + Copy + 'static> TabView<K> {
         }
     }
 
-    /// Consuming insertion of a new view.
-    /// Active tab will be switched to the newly inserted one.
-    pub fn with_view<T: View>(mut self, id: K, view: T) -> Self {
+    /// Set the currently active (visible) tab.
+    /// If the tab id is not known, an error is returned and no action is performed.
+    ///
+    /// This is the consumable variant.
+    pub fn active_tab(mut self, id: K) -> Result<Self, ()> {
+        self.set_active_tab(id)?;
+
+        Ok(self)
+    }
+
+    /// Add a new tab to the tab view.
+    /// The new tab will be set active and will be the visible tab for this tab view.
+    pub fn add_tab<T: View>(&mut self, id: K, view: T) {
         self.map.insert(id, Box::new(view));
         self.current_id = Some(id);
         self.key_order.push(id);
+    }
+
+    /// Add a new tab to the tab view.
+    /// The new tab will be set active and will be the visible tab for this tab view.
+    ///
+    /// This is the consumable variant.
+    pub fn tab<T: View>(mut self, id: K, view: T) -> Self {
+        self.add_tab(id, view);
+
         self
     }
 
-    /// Non-consuming insertion of a new view.
-    /// Active tab will be switched to the newly inserted one.
-    pub fn insert_view<T: View>(&mut self, id: K, view: T) -> K {
-        self.map.insert(id, Box::new(view));
-        self.current_id = Some(id);
-        self.key_order.push(id);
-        id
-    }
-
-    /// Returns the currently active tab Id.
-    pub fn tab(&self) -> Option<K> {
-        self.current_id
-    }
-
-    /// Removes the given id from the `TabView`.
-    /// If the removed view is active at the moment, the `TabView` will unfocus it and the focus needs to be set manually afterwards, or a new view has to be inserted.
-    pub fn remove_view(&mut self, id: K) -> Result<K, ()> {
+    /// Removes a tab with the given id from the `TabView`.
+    /// If the removed tab is active at the moment, the `TabView` will unfocus it and
+    /// the focus needs to be set manually afterwards, or a new view has to be inserted.
+    pub fn remove_tab(&mut self, id: K) -> Result<(), ()> {
         if let Some(_) = self.map.remove(&id) {
             if let Some(key) = &self.current_id {
                 if *key == id {
@@ -148,15 +161,17 @@ impl<K: Hash + Eq + Copy + 'static> TabView<K> {
                 .iter()
                 .filter_map(|key| if id == *key { None } else { Some(*key) })
                 .collect();
-            Ok(id)
+            Ok(())
         } else {
             Err(())
         }
     }
 
     /// Returns the current order of keys in a vector.
-    /// When you're implementing your own tab bar, be aware that this is the current tab bar and is only a copy of the original order, modification will not be transferred and future updates in the original not displayed.
-    pub fn get_tab_order(&self) -> Vec<K> {
+    /// When you're implementing your own tab bar, be aware that this is the current
+    /// tab bar and is only a copy of the original order, modification will not be
+    /// transferred and future updates in the original not displayed.
+    pub fn tab_order(&self) -> Vec<K> {
         self.key_order.clone()
     }
 
@@ -174,9 +189,10 @@ impl<K: Hash + Eq + Copy + 'static> TabView<K> {
         count
     }
 
+    /// Set the active tab to the next tab in order.
     pub fn next(&mut self) {
         if let Some(cur_key) = self.current_id {
-            self.set_tab(
+            self.set_active_tab(
                 self.key_order
                     [(Self::index_key(&cur_key, &self.key_order) + 1) % self.key_order.len()],
             )
@@ -184,9 +200,10 @@ impl<K: Hash + Eq + Copy + 'static> TabView<K> {
         }
     }
 
+    /// Set the active tab to the previous tab in order.
     pub fn prev(&mut self) {
         if let Some(cur_key) = self.current_id {
-            self.set_tab(
+            self.set_active_tab(
                 self.key_order[(self.key_order.len() + Self::index_key(&cur_key, &self.key_order)
                     - 1)
                     % self.key_order.len()],
@@ -216,7 +233,7 @@ impl<K: Hash + Eq + Copy + 'static> View for TabView<K> {
     fn required_size(&mut self, req: Vec2) -> Vec2 {
         if let Some(rx) = &self.bar_rx {
             if let Ok(evt) = rx.try_recv() {
-                match self.set_tab(evt) {
+                match self.set_active_tab(evt) {
                     Ok(_) => {}
                     Err(err) => debug!("could not accept tab bar event: {:?}", err),
                 }
@@ -307,26 +324,26 @@ mod test {
 
     #[test]
     fn insert() {
-        let mut tabs = TabView::<i32>::new().with_view(0, DummyView);
-        tabs.insert_view(1, DummyView);
+        let mut tabs = TabView::<i32>::new().tab(0, DummyView);
+        tabs.add_tab(1, DummyView);
     }
 
     #[test]
     fn switch() {
         let mut tabs = TabView::<i32>::new();
-        tabs.insert_view(0, DummyView);
-        tabs.insert_view(1, DummyView);
-        assert_eq!(tabs.tab().expect("Id not correct"), 1);
-        tabs.set_tab(0).expect("Id not taken");
-        assert_eq!(tabs.tab().expect("Id not correct"), 0);
+        tabs.add_tab(0, DummyView);
+        tabs.add_tab(1, DummyView);
+        assert_eq!(tabs.get_active_tab().expect("Id not correct"), 1);
+        tabs.set_active_tab(0).expect("Id not taken");
+        assert_eq!(tabs.get_active_tab().expect("Id not correct"), 0);
     }
 
     #[test]
     fn remove() {
         let mut tabs = TabView::<i32>::new();
-        tabs.insert_view(0, DummyView);
-        tabs.insert_view(1, DummyView);
-        assert_eq!(tabs.remove_view(1).unwrap(), 1);
-        assert!(tabs.tab().is_none());
+        tabs.add_tab(0, DummyView);
+        tabs.add_tab(1, DummyView);
+        assert_eq!(tabs.remove_tab(1), Ok(()));
+        assert!(tabs.get_active_tab().is_none());
     }
 }

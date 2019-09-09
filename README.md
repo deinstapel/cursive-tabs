@@ -68,8 +68,6 @@ If you find any bugs/unexpected behaviour or you have a proposition for future c
 
 ## Development [![cargo test](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fdeinstapel.github.io%2Fcursive-tabs%2Fcargo-test.json)](https://travis-ci.org/deinstapel/cursive-tabs) [![shellshot](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fdeinstapel.github.io%2Fcursive-tabs%2Fshellshot.json)](https://github.com/fin-ger/shellshot)
 
-> TBD
-
 ### Running the tests
 
 > :bangbang: **CAUTION** :bangbang: This crate uses Tmux for end2end testing and will **kill your Tmux server** during testing!
@@ -99,6 +97,13 @@ to execute all available tests.
 #### shields.io endpoints
 
 [shields.io](https://shields.io) endpoints are generated inside the `./target/shields` folder. They are used in this README.
+
+### Public API naming
+
+The current public API of this crate is not consistent with [RFC 344](https://github.com/rust-lang/rfcs/pull/344). This is due to `cursive` itself not being
+consistent with `RFC 344`. This crate tries to implement a smooth user experience for cursive
+users. Therefore, the `cursive` naming convention was adapted. When `cursive` upstream converts
+their API to a `RFC 344` consistent naming scheme, this crate will adapt to the changes.
 
 ## Authors
 

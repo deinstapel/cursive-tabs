@@ -40,7 +40,7 @@ exports[`tests removal of a currently inactive tab 1`] = `
                                                                                 
                                                                                 
                                                                                 
-                                                                                
+                                     Second                                     
                                                                                 
                                                                                 
                                                                                 
@@ -68,7 +68,7 @@ exports[`tests switching tabs 1`] = `
                                                                                 
                                                                                 
                                                                                 
-                                                                                
+                                     First                                      
                                                                                 
                                                                                 
                                                                                 
