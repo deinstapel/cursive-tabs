@@ -85,13 +85,13 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabPanel<K> {
 
     /// Non-consuming variant to add new tabs to the `TabView`.
     /// Note: Calls `add_tab` on the enclosed `TabView`.
-    pub fn add_tab<T: View + Send>(&mut self, id: K, view: T) {
+    pub fn add_tab<T: View>(&mut self, id: K, view: T) {
         self.tabs.add_tab(id, view);
     }
 
     /// Consuming & Chainable variant to add a new tab.
     /// Note: Calls `add_tab` on the enclosed `TabView`.
-    pub fn with_tab<T: View + Send>(mut self, id: K, view: T) -> Self {
+    pub fn with_tab<T: View>(mut self, id: K, view: T) -> Self {
         self.tabs.add_tab(id, view);
 
         self

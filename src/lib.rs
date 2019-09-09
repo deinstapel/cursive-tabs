@@ -58,7 +58,7 @@ pub use panel::TabPanel;
 /// Main struct which manages views
 pub struct TabView<K: Hash> {
     current_id: Option<K>,
-    map: HashMap<K, Box<dyn View + Send>>,
+    map: HashMap<K, Box<dyn View>>,
     key_order: Vec<K>,
     bar_rx: Option<Receiver<K>>,
     active_key_tx: Option<Sender<K>>,
@@ -128,7 +128,7 @@ impl<K: Hash + Eq + Copy + 'static> TabView<K> {
 
     /// Add a new tab to the tab view.
     /// The new tab will be set active and will be the visible tab for this tab view.
-    pub fn add_tab<T: View + Send>(&mut self, id: K, view: T) {
+    pub fn add_tab<T: View>(&mut self, id: K, view: T) {
         self.map.insert(id, Box::new(view));
         self.current_id = Some(id);
         self.key_order.push(id);
@@ -138,7 +138,7 @@ impl<K: Hash + Eq + Copy + 'static> TabView<K> {
     /// The new tab will be set active and will be the visible tab for this tab view.
     ///
     /// This is the consumable variant.
-    pub fn with_tab<T: View + Send>(mut self, id: K, view: T) -> Self {
+    pub fn with_tab<T: View>(mut self, id: K, view: T) -> Self {
         self.add_tab(id, view);
 
         self
