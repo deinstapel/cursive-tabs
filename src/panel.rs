@@ -40,7 +40,6 @@ pub struct TabPanel<K: Hash + Eq + Display + Copy + 'static> {
 }
 
 impl<K: Hash + Eq + Copy + Display + 'static> TabPanel<K> {
-
     /// Returns a new instance of a TabPanel.
     /// Alignment is set by default to left, to change this use `set_bar_alignment` to change to any other `HAlign` provided by `cursive`.
     pub fn new() -> Self {
@@ -173,9 +172,9 @@ impl<K: Hash + Eq + Copy + std::fmt::Display + 'static> View for TabPanel<K> {
 
     fn required_size(&mut self, cst: Vec2) -> Vec2 {
         if self.order != self.tab_order() {
-            debug!("rebuild time!");
-            self.bar = TabBar::new(self.active_rx.clone())
-                .h_align(Self::clone_align(&self.bar_h_align));
+            debug!("rebuilding tabbar");
+            self.bar =
+                TabBar::new(self.active_rx.clone()).h_align(Self::clone_align(&self.bar_h_align));
             for key in self.tab_order() {
                 self.bar.add_button(self.tx.clone(), key);
             }
@@ -183,7 +182,10 @@ impl<K: Hash + Eq + Copy + std::fmt::Display + 'static> View for TabPanel<K> {
         }
         let tab_size = self.tabs.required_size(cst);
         self.bar_size = self.bar.required_size(cst);
-        self.bar_size.stack_vertical(&tab_size)
+        self.bar_size
+            .stack_vertical(&tab_size)
+            // Offset for box drawing characters
+            .stack_vertical(&Vec2::new(tab_size.x + 2, 1))
     }
 
     fn on_event(&mut self, evt: Event) -> EventResult {
