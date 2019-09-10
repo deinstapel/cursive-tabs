@@ -211,9 +211,8 @@ impl<K: Hash + Eq + Copy + std::fmt::Display + 'static> View for TabPanel<K> {
         }
 
         if self.bar_focused {
-            let result = self.bar.on_event(evt.clone());
-            match result {
-                EventResult::Consumed(_) => result,
+            match self.bar.on_event(evt.clone()) {
+                EventResult::Consumed(cb) => EventResult::Consumed(cb),
                 EventResult::Ignored => match evt {
                     Event::Key(Key::Down) => match self.tabs.take_focus(Direction::up()) {
                         true => {
@@ -227,7 +226,7 @@ impl<K: Hash + Eq + Copy + std::fmt::Display + 'static> View for TabPanel<K> {
             }
         } else {
             match self.tabs.on_event(evt.relativized((0, self.bar_size.y))) {
-                EventResult::Consumed(_) => EventResult::Consumed(None),
+                EventResult::Consumed(cb) => EventResult::Consumed(cb),
                 EventResult::Ignored => match evt {
                     Event::Key(Key::Up) => {
                         self.bar_focused = true;
