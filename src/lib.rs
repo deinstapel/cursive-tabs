@@ -274,12 +274,9 @@ impl<K: Hash + Eq + Copy + 'static> View for TabView<K> {
         }
     }
 
-    fn call_on_any<'a>(&mut self, slt: &Selector, cb: AnyCb<'a>) {
-        // TODO Iterate over all keys
-        if let Some(key) = &self.current_id {
-            if let Some(view) = self.map.get_mut(&key) {
-                view.call_on_any(slt, cb);
-            }
+    fn call_on_any<'a>(&mut self, slt: &Selector, mut cb: AnyCb<'a>) {
+        for (_, view) in self.map.iter_mut() {
+            view.call_on_any(slt, Box::new(|any| cb(any)));
         }
     }
 
