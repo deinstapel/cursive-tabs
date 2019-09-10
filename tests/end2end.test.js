@@ -24,3 +24,4 @@ function cargo_e2e(name, custom) {
 it('tests removal of a currently active tab', cargo_e2e('remove_active'));
 it('tests removal of a currently inactive tab', cargo_e2e('remove_inactive'));
 it('tests switching tabs', cargo_e2e('switch'));
+it('smoke tests the tab panel', cargo_e2e('panel_smoke'));

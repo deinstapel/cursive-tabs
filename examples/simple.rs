@@ -4,14 +4,16 @@ use cursive::views::{Button, LinearLayout, PaddedView, TextArea, TextView};
 use cursive::Cursive;
 use cursive_tabs::TabPanel;
 
-const TAB_0: &'static str = "With using the TabPanel you get a TabView and TabBar, preconfigured for you to use!
+const TAB_0: &'static str =
+    "With using the TabPanel you get a TabView and TabBar, preconfigured for you to use!
 Simply create it with:
 
 `cursive_tabs::TabPanel::new()`";
 
 const TAB_1: &'static str = "You then can add views and configure your panel.";
 
-const TAB_2: &'static str = "Ofcourse you can also use the provided TabView without the panel, simply create it with:
+const TAB_2: &'static str =
+    "Ofcourse you can also use the provided TabView without the panel, simply create it with:
 
 `cursive_tabs::TabView::new()`";
 
@@ -29,7 +31,7 @@ fn main() {
         .with_tab(1, TextView::new(TAB_1))
         .with_tab(2, TextView::new(TAB_2))
         .with_tab(3, TextView::new(TAB_3))
-        .with_tab(4, PaddedView::new((2,2,1,1),TextArea::new()))
+        .with_tab(4, PaddedView::new((2, 2, 1, 1), TextArea::new()))
         .with_bar_alignment(HAlign::Right)
         .with_active_tab(0)
         .expect("oh no");
