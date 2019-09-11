@@ -46,8 +46,8 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabPanel<K> {
         let mut tabs = TabView::new();
         let (tx, rx) = unbounded();
         let (active_tx, active_rx) = unbounded();
-        tabs.bar_rx = Some(rx);
-        tabs.active_key_tx = Some(active_tx);
+        tabs.set_bar_rx(rx);
+        tabs.set_active_key_tx(active_tx);
         Self {
             order: Vec::new(),
             bar: TabBar::new(active_rx.clone()),

@@ -1,7 +1,7 @@
 use cursive::views::TextView;
 use cursive_tabs::TabPanel;
 
-use cursive::{Cursive, align::HAlign};
+use cursive::{align::HAlign, Cursive};
 
 fn main() {
     let mut siv = Cursive::default();

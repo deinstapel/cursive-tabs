@@ -211,6 +211,15 @@ impl<K: Hash + Eq + Copy + 'static> TabView<K> {
             .expect("Key content changed during operation, this should not happen");
         }
     }
+
+    /// Set the receiver for keys to be changed to
+    pub fn set_bar_rx(&mut self, rx: Receiver<K>) {
+        self.bar_rx = Some(rx);
+    }
+
+    pub fn set_active_key_tx(&mut self, tx: Sender<K>) {
+        self.active_key_tx = Some(tx);
+    }
 }
 
 impl<K: Hash + Eq + Copy + 'static> View for TabView<K> {

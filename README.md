@@ -46,9 +46,33 @@ Simply add to your `Cargo.toml`
 cursive-tabs = "^0"
 ```
 
-### Creating your `TabView` and add tabs
+### Creating a `TabPanel`
 
-This crate provides a struct `TabView` you can use to add tabs and switch between them.
+The easiest way to use this crate is by creating a `TabPanel` and add your views to it.
+In the `TabPanel` included is a bar that shows all tabs and allows to switch between them by clicking the desired tab. 
+Below it is the `TabView` showing the current tab.
+
+It can be created by simply calling new on `TabPanel` and views and customize it as you want, have a look at the [documentation](https://docs.rs/cursive-tabs) to see all options.
+
+```rust
+use cursive::{TextView, Cursive}
+use cursive_tabs::TabPanel;
+
+let mut siv = Cursive::default;
+
+//Create your panel and add tabs
+let mut panel = TabPanel::new()
+    .with_tab("First", TextView::new("This is the first view!"))
+    .with_tab("Second", TextView::new("This is the second view!"));
+siv.add_layer(panel);
+siv.run();
+```
+
+### Creating a `TabView`
+
+This crate also provides a struct `TabView` you can use to add tabs and switch between them, if you do not need a separate bar to switch and e.g. want to switch programmatically.
+
+The `TabView` can also be used to create your own Panel/Bar if you want to design your cursive environment a different way.
 
 ```rust
 use cursive::{views::TextView, Cursive};
@@ -64,6 +88,32 @@ siv.run();
 
 Look into the [documentation](https://docs.rs/cursive-tabs) for more examples and a detailed explanation.
 
+### Creating your own Panel :hammer::construction:
+
+When you create a `TabBar` it will more or less look similar to the view e.g. also used in the example. To customize it you then need to create a view, creating a `TabBar` and a `TabView` events between them can be exchanged e.g. with channels.
+Channels have been chosen in this case by us, because they provide the easiest way to communicate between to instances of views in cursive.
+
+To make these channels work you have to create two separate channels transmitting both keys, once for the direction from the bar to the tab view, transmitting keys that have been selected by e.g. buttons, and the other from the tab view to the bar.
+
+An example for such a button would look like this.
+```rust 
+let button_tx_clone = button_tx.clone();
+let button = Button::new_raw(format!(" {} ", key), move |_| {
+                match button_tx_clone.send(key) {
+                    Ok(_) => {}
+                    Err(err) => {
+                        debug!("button could not send key: {:?}", err);
+                    }
+                }
+            });
+```
+
+To make the `TabView` respond to messages over this channel pass the receiving end to the tab view via the method `set_bar_rx`.
+
+The other direction can be set by passing the Sender to `TabView` via the method `set_active_key_tx`. In this channel the currently active is send everytime a switch between tabs occurs. You can use this to register switches in your tab bar.
+
+The rest is depending on how you want to style your panel, but if you have anymore questions or problems have a look at the source of the provided `TabPanel`.
+ 
 ## Troubleshooting
 
 If you find any bugs/unexpected behaviour or you have a proposition for future changes open an issue describing the current behaviour and what you expected.
