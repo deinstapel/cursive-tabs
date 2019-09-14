@@ -45,6 +45,7 @@ pub struct TabBar<K: Hash + Eq + Copy + Display + 'static> {
     sizes: Vec<Vec2>,
     idx: Option<usize>,
     rx: Receiver<K>,
+    invalidated: bool,
 }
 
 impl<K: Hash + Eq + Copy + Display + 'static> TabBar<K> {
@@ -57,11 +58,13 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabBar<K> {
             bar_size: Vec2::zero(),
             last_rendered_size: Vec2::zero(),
             rx,
+            invalidated: true,
         }
     }
 
     pub fn h_align(mut self, align: HAlign) -> Self {
         self.h_align = align;
+        self.invalidated = true;
         self
     }
 }
@@ -79,6 +82,7 @@ impl<K: Hash + Eq + Copy + Display + 'static> Bar<K> for TabBar<K> {
         });
         self.children.push(PositionWrap::new(button, key));
         self.idx = Some(self.children.len() - 1);
+        self.invalidated = true;
     }
 }
 
@@ -88,7 +92,6 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
         printer.print_hline((0, 0), printer.size.x, "─");
         printer.print((0, 0), "┌");
         printer.print((printer.size.x - 1, 0), "┐");
-        let mut count = 0;
         // Spacing for padding & crop end
         let inner_printer = printer
             .offset((1, 0))
@@ -101,10 +104,10 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
                 0,
             ))
             .cropped((printer.size.x - 2, printer.size.y));
-        for child in &self.children {
+        for (idx, child) in self.children.iter().enumerate() {
             // There is no chainable api...
             let mut rel_sizes = self.sizes.clone();
-            rel_sizes.truncate(count);
+            rel_sizes.truncate(idx);
             let mut print = inner_printer
                 .offset(
                     rel_sizes
@@ -113,12 +116,12 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
                         .keep_x(),
                 )
                 // Spacing for first character
-                .offset((count * 1, 0))
+                .offset((idx * 1, 0))
                 .cropped({
-                    if count == 0 || count == self.children.len() - 1 {
-                        self.sizes[count].stack_horizontal(&Vec2::new(2, 1))
+                    if idx == 0 || idx == self.children.len() - 1 {
+                        self.sizes[idx].stack_horizontal(&Vec2::new(2, 1))
                     } else {
-                        self.sizes[count].stack_horizontal(&Vec2::new(1, 1))
+                        self.sizes[idx].stack_horizontal(&Vec2::new(1, 1))
                     }
                 });
             let mut theme = printer.theme.clone();
@@ -132,12 +135,12 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
             }
 
             if let Some(focus) = self.idx {
-                print = print.focused(focus == count);
+                print = print.focused(focus == idx);
             }
 
             print.with_theme(&theme, |printer| {
-                if count > 0 {
-                    if child.active || self.children[count - 1].active {
+                if idx > 0 {
+                    if child.active || self.children[idx - 1].active {
                         printer.print((0, 0), "┃")
                     } else {
                         printer.print((0, 0), "│");
@@ -150,31 +153,36 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
                     }
                 }
                 printer.with_effect(Effect::Bold, |printer| child.draw(&printer.offset((1, 0))));
-                if count == self.children.len() - 1 {
+                if idx == self.children.len() - 1 {
                     if child.active {
                         printer
                             .offset((1, 0))
-                            .print(self.sizes[count].keep_x(), "┠");
+                            .print(self.sizes[idx].keep_x(), "┠");
                     } else {
                         printer
                             .offset((1, 0))
-                            .print(self.sizes[count].keep_x(), "├");
+                            .print(self.sizes[idx].keep_x(), "├");
                     }
                 }
             });
-            count += 1;
         }
     }
 
     fn layout(&mut self, vec: Vec2) {
+        self.invalidated = false;
         for (child, size) in self.children.iter_mut().zip(self.sizes.iter()) {
             child.layout(*size);
         }
         self.last_rendered_size = vec;
     }
 
+    fn needs_relayout(&self) -> bool {
+        self.invalidated
+    }
+
     fn required_size(&mut self, cst: Vec2) -> Vec2 {
         if let Ok(new_active) = self.rx.try_recv() {
+            self.invalidated = true;
             for child in &mut self.children {
                 if new_active == child.key {
                     child.active = true;
@@ -184,18 +192,20 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
             }
         }
         self.sizes.clear();
-        let mut start = Vec2::zero();
-        for child in &mut self.children {
+        let sizes = &mut self.sizes;
+        let total_size = self.children.iter_mut().fold(Vec2::zero(), |mut acc, child| {
             let size = child.required_size(cst);
-            start = start.stack_horizontal(&size.keep_x());
-            child.pos = start;
-            self.sizes.push(size);
-        }
+            acc = acc.stack_horizontal(&size.keep_x());
+            child.pos = acc;
+            sizes.push(size);
+            acc
+        });
         // Total size of bar
-        self.bar_size = start;
+        self.bar_size = total_size;
         // Return max width and maximum height of child
         Vec2::new(
             cst.x,
+            // Maximum height
             self.sizes.iter().fold(0, |mut val, x| {
                 if val < x.y {
                     val = x.y;
@@ -212,23 +222,17 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
                 position,
                 event,
             } => {
-                let mut iter = self.children.iter().peekable();
-                let mut count = 0;
-                while let Some(child) = iter.next() {
+                let mut iter = self.children.iter().peekable().enumerate();
+                while let Some((idx, child)) = iter.next() {
                     if position.checked_sub(offset).is_some() {
                         if (child.pos
                             + Vec2::new(
-                                {
-                                    if count * 2 > 0 {
-                                        count * 2
-                                    } else {
-                                        1
-                                    }
-                                },
-                                0,
+                                idx + 1,
+                                0
                             )
                             + Vec2::new(
                                 self.h_align.get_offset(
+                                    // Length of buttons and delimiting characters
                                     self.bar_size.x + self.children.len() + 1,
                                     self.last_rendered_size.x - 2,
                                 ),
@@ -236,16 +240,15 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
                             ))
                         .fits(position - offset)
                         {
-                            debug!("hit");
                             match event {
                                 MouseEvent::Release(MouseButton::Left) => {
-                                    self.idx = Some(count);
-                                    return self.children[count].on_event(Event::Key(Key::Enter));
+                                    self.invalidated = true;
+                                    self.idx = Some(idx);
+                                    return self.children[idx].on_event(Event::Key(Key::Enter));
                                 }
                                 _ => {}
                             }
                         }
-                        count += 1;
                     }
                 }
             }
@@ -253,14 +256,10 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
         }
 
         if let Some(focus) = self.idx {
-            debug!("Passing event {:?} to button {}.", evt.clone(), focus);
             let pos = self.children[focus].pos;
-            debug!("evt location: {:?}", evt.relativized(pos));
-            let result = self.children[focus].on_event(evt.relativized(pos));
-            match result {
-                EventResult::Consumed(_) => {
-                    debug!("Event has callback: {}", result.has_callback());
-                    return result;
+            match self.children[focus].on_event(evt.relativized(pos)) {
+                EventResult::Consumed(any) => {
+                    return EventResult::Consumed(any);
                 }
                 _ => {}
             }
@@ -271,6 +270,7 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
                 if let Some(index) = self.idx {
                     if index > 0 {
                         self.idx = Some(index - 1);
+                        self.invalidated = true;
                         EventResult::Consumed(None)
                     } else {
                         EventResult::Ignored
@@ -285,6 +285,7 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
                         EventResult::Ignored
                     } else {
                         self.idx = Some(index + 1);
+                        self.invalidated = true;
                         EventResult::Consumed(None)
                     }
                 } else {

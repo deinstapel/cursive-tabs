@@ -163,16 +163,17 @@ impl<K: Hash + Eq + Copy + std::fmt::Display + 'static> View for TabPanel<K> {
     fn layout(&mut self, vec: Vec2) {
         self.bar.layout(Vec2::new(vec.x, self.bar_size.y));
         self.tabs
+            // Retract panel size
             .layout(Vec2::new(vec.x - 2, vec.y - self.bar_size.y - 1));
     }
 
     fn needs_relayout(&self) -> bool {
-        true
+        self.bar.needs_relayout() || self.tabs.needs_relayout()
     }
 
     fn required_size(&mut self, cst: Vec2) -> Vec2 {
         if self.order != self.tab_order() {
-            debug!("rebuilding tabbar");
+            debug!("Rebuilding TabBar");
             self.bar =
                 TabBar::new(self.active_rx.clone()).h_align(Self::clone_align(&self.bar_h_align));
             for key in self.tab_order() {

@@ -62,6 +62,7 @@ pub struct TabView<K: Hash> {
     key_order: Vec<K>,
     bar_rx: Option<Receiver<K>>,
     active_key_tx: Option<Sender<K>>,
+    invalidated: bool,
 }
 
 impl<K: Hash + Eq + Copy + 'static> TabView<K> {
@@ -88,6 +89,7 @@ impl<K: Hash + Eq + Copy + 'static> TabView<K> {
             key_order: Vec::new(),
             bar_rx: None,
             active_key_tx: None,
+            invalidated: true,
         }
     }
 
@@ -110,6 +112,7 @@ impl<K: Hash + Eq + Copy + 'static> TabView<K> {
                 }
             }
             self.current_id = Some(id);
+            self.invalidated = true;
             Ok(())
         } else {
             Err(())
@@ -161,6 +164,7 @@ impl<K: Hash + Eq + Copy + 'static> TabView<K> {
                 .iter()
                 .filter_map(|key| if id == *key { None } else { Some(*key) })
                 .collect();
+            self.invalidated = true;
             Ok(())
         } else {
             Err(())
@@ -178,15 +182,12 @@ impl<K: Hash + Eq + Copy + 'static> TabView<K> {
     // Returns the index of the key, length of the vector if the key is not included
     // This can be done with out sorting
     fn index_key(cur_key: &K, key_order: &Vec<K>) -> usize {
-        let mut count: usize = 0;
-        for key in key_order {
-            if *key != *cur_key {
-                count += 1;
-            } else {
-                break;
+        for (idx, key) in key_order.iter().enumerate() {
+            if *key == *cur_key {
+                return idx
             }
         }
-        count
+        key_order.len()
     }
 
     /// Set the active tab to the next tab in order.
@@ -217,6 +218,7 @@ impl<K: Hash + Eq + Copy + 'static> TabView<K> {
         self.bar_rx = Some(rx);
     }
 
+    /// Set the sender for the key switched to
     pub fn set_active_key_tx(&mut self, tx: Sender<K>) {
         self.active_key_tx = Some(tx);
     }
@@ -232,6 +234,7 @@ impl<K: Hash + Eq + Copy + 'static> View for TabView<K> {
     }
 
     fn layout(&mut self, size: Vec2) {
+        self.invalidated = false;
         if let Some(key) = &self.current_id {
             if let Some(view) = self.map.get_mut(&key) {
                 view.layout(size);
@@ -302,7 +305,17 @@ impl<K: Hash + Eq + Copy + 'static> View for TabView<K> {
     }
 
     fn needs_relayout(&self) -> bool {
-        true
+        self.invalidated || {
+            if let Some(key) = self.current_id {
+                if let Some(view) = self.map.get(&key) {
+                    view.needs_relayout()
+                } else {
+                    false
+                }
+            } else {
+                false
+            }
+        }
     }
 
     fn important_area(&self, size: Vec2) -> Rect {
