@@ -184,7 +184,7 @@ impl<K: Hash + Eq + Copy + 'static> TabView<K> {
     fn index_key(cur_key: &K, key_order: &Vec<K>) -> usize {
         for (idx, key) in key_order.iter().enumerate() {
             if *key == *cur_key {
-                return idx
+                return idx;
             }
         }
         key_order.len()

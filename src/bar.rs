@@ -155,13 +155,9 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
                 printer.with_effect(Effect::Bold, |printer| child.draw(&printer.offset((1, 0))));
                 if idx == self.children.len() - 1 {
                     if child.active {
-                        printer
-                            .offset((1, 0))
-                            .print(self.sizes[idx].keep_x(), "┠");
+                        printer.offset((1, 0)).print(self.sizes[idx].keep_x(), "┠");
                     } else {
-                        printer
-                            .offset((1, 0))
-                            .print(self.sizes[idx].keep_x(), "├");
+                        printer.offset((1, 0)).print(self.sizes[idx].keep_x(), "├");
                     }
                 }
             });
@@ -193,13 +189,16 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
         }
         self.sizes.clear();
         let sizes = &mut self.sizes;
-        let total_size = self.children.iter_mut().fold(Vec2::zero(), |mut acc, child| {
-            let size = child.required_size(cst);
-            acc = acc.stack_horizontal(&size.keep_x());
-            child.pos = acc;
-            sizes.push(size);
-            acc
-        });
+        let total_size = self
+            .children
+            .iter_mut()
+            .fold(Vec2::zero(), |mut acc, child| {
+                let size = child.required_size(cst);
+                acc = acc.stack_horizontal(&size.keep_x());
+                child.pos = acc;
+                sizes.push(size);
+                acc
+            });
         // Total size of bar
         self.bar_size = total_size;
         // Return max width and maximum height of child
@@ -226,10 +225,7 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
                 while let Some((idx, child)) = iter.next() {
                     if position.checked_sub(offset).is_some() {
                         if (child.pos
-                            + Vec2::new(
-                                idx + 1,
-                                0
-                            )
+                            + Vec2::new(idx + 1, 0)
                             + Vec2::new(
                                 self.h_align.get_offset(
                                     // Length of buttons and delimiting characters
