@@ -255,6 +255,7 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
             let pos = self.children[focus].pos;
             match self.children[focus].on_event(evt.relativized(pos)) {
                 EventResult::Consumed(any) => {
+                    self.invalidated = true;
                     return EventResult::Consumed(any);
                 }
                 _ => {}

@@ -19,7 +19,7 @@ const TAB_2: &'static str =
 
 const TAB_3: &'static str = "All you have to do is add:
 
-cursive-tabs = \"0^\"
+cursive-tabs = \"^0\"
 
 to your Cargo.toml!
 ";
