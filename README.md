@@ -15,6 +15,9 @@
   <a href="https://github.com/deinstapel/cursive-tabs/blob/master/LICENSE">
     <img alt="GitHub" src="https://img.shields.io/github/license/deinstapel/cursive-tabs.svg">
   </a>
+  <a href="http://spacemacs.org">
+    <img src="https://cdn.rawgit.com/syl20bnr/spacemacs/442d025779da2f62fc86c2082703697714db6514/assets/spacemacs-badge.svg" />
+  </a>
   <a href="http://makeapullrequest.com">
     <img alt="PRs Welcome" src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg">
   </a>
