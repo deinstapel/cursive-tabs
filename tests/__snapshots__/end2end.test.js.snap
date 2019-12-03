@@ -28,6 +28,62 @@ exports[`smoke tests the tab panel 1`] = `
 "
 `;
 
+exports[`tests inserting tabs at defined position 1`] = `
+"                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                     First                                      
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+"
+`;
+
+exports[`tests inserting tabs at defined position in panel 1`] = `
+"                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+ ┌─────────────────────────────┤ Much │ Stonks ├──────────────────────────────┐ 
+ │Ahhhhh                                                                      │ 
+ └────────────────────────────────────────────────────────────────────────────┘ 
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+"
+`;
+
 exports[`tests removal of a currently active tab 1`] = `
 "                                                                                
                                                                                 

@@ -96,6 +96,22 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabPanel<K> {
         self
     }
 
+    /// Non-consuming variant to add new tabs to the `TabView` at a certain position.
+    /// It is fail-safe, if the postion is greater than the amount of tabs, it is appended to the end.
+    /// Note: Calls `add_tab_at` on the enclosed `TabView`.
+    pub fn add_tab_at<T: View>(&mut self, id: K, view: T, pos: usize) {
+        self.tabs.add_tab_at(id, view, pos);
+    }
+
+    /// Consuming & Chainable variant to add a new tab at a certain position.
+    /// It is fail-safe, if the postion is greater than the amount of tabs, it is appended to the end.
+    /// Note: Calls `add_tab_at` on the enclosed `TabView`.
+    pub fn with_tab_at<T: View>(mut self, id: K, view: T, pos: usize) -> Self {
+        self.tabs.add_tab_at(id, view, pos);
+
+        self
+    }
+
     /// Remove a tab of the enclosed `TabView`.
     pub fn remove_tab(&mut self, id: K) -> Result<(), ()> {
         self.tabs.remove_tab(id)

@@ -147,6 +147,31 @@ impl<K: Hash + Eq + Copy + 'static> TabView<K> {
         self
     }
 
+    /// Add a new tab at a given position.
+    /// The new tab will be set active and will be the visible tab for this tab view.
+    ///
+    /// This is designed to not fail, if the given position is greater than the number of current tabs, it simply will be appended.
+    pub fn add_tab_at<T: View>(&mut self, id: K, view: T, pos: usize) {
+        self.map.insert(id, Box::new(view));
+        self.current_id = Some(id);
+        if self.key_order.len() > pos {
+            self.key_order.insert(pos, id)
+        } else {
+            self.key_order.push(id);
+        }
+    }
+
+    /// Add a new tab at a given position.
+    /// The new tab will be set active and will be the visible tab for this tab view.
+    ///
+    /// It is designed to be fail-safe, if the given position is greater than the number of current tabs, it simply will be appended.
+    ///
+    /// This is the consumable variant.
+    pub fn with_tab_at<T: View>(mut self, id: K, view: T, pos: usize) -> Self {
+        self.add_tab_at(id, view, pos);
+        self
+    }
+
     /// Removes a tab with the given id from the `TabView`.
     /// If the removed tab is active at the moment, the `TabView` will unfocus it and
     /// the focus needs to be set manually afterwards, or a new view has to be inserted.
