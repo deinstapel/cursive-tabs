@@ -96,6 +96,12 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabPanel<K> {
         self
     }
 
+    /// Swaps the given tab keys.
+    /// If at least one of them cannot be found then no operation is performed
+    pub fn swap_tabs(&mut self, fst: K, snd: K) {
+        self.tabs.swap_tabs(fst, snd);
+    }
+
     /// Non-consuming variant to add new tabs to the `TabView` at a certain position.
     /// It is fail-safe, if the postion is greater than the amount of tabs, it is appended to the end.
     /// Note: Calls `add_tab_at` on the enclosed `TabView`.

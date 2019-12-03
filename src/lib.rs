@@ -172,6 +172,24 @@ impl<K: Hash + Eq + Copy + 'static> TabView<K> {
         self
     }
 
+
+    /// Swap the tabs position.
+    /// If one of the given key cannot be found, then no operation is performed.
+    pub fn swap_tabs(&mut self, fst: K, snd: K) {
+        let mut fst_pos: Option<usize> = None;
+        let mut snd_pos: Option<usize> = None;
+        for (pos, key) in self.tab_order().into_iter().enumerate() {
+            match key {
+                val if val == fst => fst_pos = Some(pos),
+                val if val == snd => snd_pos = Some(pos),
+                _ => {},
+            }
+        }
+        if fst_pos.is_some() && snd_pos.is_some() {
+            self.key_order.swap(fst_pos.unwrap(), snd_pos.unwrap());
+        }
+    }
+
     /// Removes a tab with the given id from the `TabView`.
     /// If the removed tab is active at the moment, the `TabView` will unfocus it and
     /// the focus needs to be set manually afterwards, or a new view has to be inserted.
