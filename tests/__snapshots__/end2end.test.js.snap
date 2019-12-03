@@ -40,7 +40,7 @@ exports[`tests inserting tabs at defined position 1`] = `
                                                                                 
                                                                                 
                                                                                 
-                                     First                                      
+                                     Second                                     
                                                                                 
                                                                                 
                                                                                 
@@ -67,7 +67,7 @@ exports[`tests inserting tabs at defined position in panel 1`] = `
                                                                                 
                                                                                 
                                                                                 
- ┌─────────────────────────────┤ Much │ Stonks ├──────────────────────────────┐ 
+ ┌───────────────────────────┤ So │ Much │ Stonks ├───────────────────────────┐ 
  │Ahhhhh                                                                      │ 
  └────────────────────────────────────────────────────────────────────────────┘ 
                                                                                 
