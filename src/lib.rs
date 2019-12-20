@@ -53,7 +53,7 @@ mod panel;
 
 // Reexports
 use bar::{Bar, TabBar};
-pub use panel::TabPanel;
+pub use panel::{Align, TabPanel};
 
 /// Main struct which manages views
 pub struct TabView<K: Hash> {
@@ -172,7 +172,6 @@ impl<K: Hash + Eq + Copy + 'static> TabView<K> {
         self
     }
 
-
     /// Swap the tabs position.
     /// If one of the given key cannot be found, then no operation is performed.
     pub fn swap_tabs(&mut self, fst: K, snd: K) {
@@ -182,7 +181,7 @@ impl<K: Hash + Eq + Copy + 'static> TabView<K> {
             match key {
                 val if val == fst => fst_pos = Some(pos),
                 val if val == snd => snd_pos = Some(pos),
-                _ => {},
+                _ => {}
             }
         }
         if fst_pos.is_some() && snd_pos.is_some() {

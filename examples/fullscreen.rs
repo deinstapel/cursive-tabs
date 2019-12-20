@@ -1,8 +1,7 @@
-use cursive::align::HAlign;
 use cursive::view::{Boxable, Identifiable};
 use cursive::views::{Button, LinearLayout, PaddedView, TextArea, TextView};
 use cursive::Cursive;
-use cursive_tabs::TabPanel;
+use cursive_tabs::{Align, TabPanel};
 
 const TAB_0: &'static str =
     "With using the TabPanel you get a TabView and TabBar, preconfigured for you to use!
@@ -32,7 +31,7 @@ fn main() {
         .with_tab(2, TextView::new(TAB_2))
         .with_tab(3, TextView::new(TAB_3))
         .with_tab(4, PaddedView::new((2, 2, 1, 1), TextArea::new()))
-        .with_bar_alignment(HAlign::Right)
+        .with_bar_alignment(Align::End)
         .with_active_tab(0)
         .expect("oh no");
 

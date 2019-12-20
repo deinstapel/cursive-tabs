@@ -1,5 +1,4 @@
 use crossbeam::{unbounded, Receiver, Sender};
-use cursive::align::HAlign;
 use cursive::direction::{Absolute, Direction};
 use cursive::event::{AnyCb, Event, EventResult, Key};
 use cursive::view::{Selector, View};
@@ -12,19 +11,39 @@ use crate::Bar;
 use crate::TabBar;
 use crate::TabView;
 
+#[derive(Clone, Copy, Debug)]
+pub enum Align {
+    Start,
+    Center,
+    End,
+}
+
+impl Align {
+    pub fn get_offset(&self, content: usize, container: usize) -> usize {
+        if container < content {
+            0
+        } else {
+            match *self {
+                Align::Start => 0,
+                Align::Center => (container - content) / 2,
+                Align::End => container - content,
+            }
+        }
+    }
+}
+
 /// The `TabPanel` is an ease of use wrapper around a `TabView` and its `TabBar`.
 /// Additionally the TabBar in the Panel can be horizontally aligned, by default it is set to be left aligned.
 ///
 /// # Example
 /// ```
-/// use cursive_tabs::TabPanel;
+/// use cursive_tabs::{Align, TabPanel};
 /// use cursive::views::TextView;
-/// use cursive::align::HAlign;
 ///
 /// let mut tabs = TabPanel::new()
 ///       .with_tab("First", TextView::new("First"))
 ///       .with_tab("Second", TextView::new("Second"))
-///       .with_bar_alignment(HAlign::Center);
+///       .with_bar_alignment(Align::Center);
 /// ```
 ///
 /// A TabView is also usable separately, so if you prefer the tabs without the TabBar and Panel around have a look at `TabView`.
@@ -36,7 +55,7 @@ pub struct TabPanel<K: Hash + Eq + Display + Copy + 'static> {
     tabs: TabView<K>,
     active_rx: Receiver<K>,
     bar_focused: bool,
-    bar_h_align: HAlign,
+    bar_align: Align,
 }
 
 impl<K: Hash + Eq + Copy + Display + 'static> TabPanel<K> {
@@ -56,7 +75,7 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabPanel<K> {
             tx,
             active_rx,
             bar_focused: false,
-            bar_h_align: HAlign::Left,
+            bar_align: Align::Start,
         }
     }
 
@@ -134,29 +153,20 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabPanel<K> {
     }
 
     /// Consumable & Chainable variant to set the bar alignment.
-    pub fn with_bar_alignment(mut self, align: HAlign) -> Self {
+    pub fn with_bar_alignment(mut self, align: Align) -> Self {
         self.set_bar_alignment(align);
 
         self
     }
 
     /// Non-consuming variant to set the bar alignment.
-    pub fn set_bar_alignment(&mut self, align: HAlign) {
-        self.bar_h_align = align;
+    pub fn set_bar_alignment(&mut self, align: Align) {
+        self.bar_align = align;
     }
 
     /// Returns the current order of tabs as an Vector with the keys of the views.
     pub fn tab_order(&self) -> Vec<K> {
         self.tabs.tab_order()
-    }
-
-    // Workaround, neither clone or copy implemented for HAlign
-    fn clone_align(align: &HAlign) -> HAlign {
-        match align {
-            HAlign::Center => HAlign::Center,
-            HAlign::Left => HAlign::Left,
-            HAlign::Right => HAlign::Right,
-        }
     }
 }
 
@@ -196,8 +206,7 @@ impl<K: Hash + Eq + Copy + std::fmt::Display + 'static> View for TabPanel<K> {
     fn required_size(&mut self, cst: Vec2) -> Vec2 {
         if self.order != self.tab_order() {
             debug!("Rebuilding TabBar");
-            self.bar =
-                TabBar::new(self.active_rx.clone()).h_align(Self::clone_align(&self.bar_h_align));
+            self.bar = TabBar::new(self.active_rx.clone()).h_align(self.bar_align);
             for key in self.tab_order() {
                 self.bar.add_button(self.tx.clone(), key);
             }

@@ -1,5 +1,4 @@
 use crossbeam::{Receiver, Sender};
-use cursive::align::HAlign;
 use cursive::event::{Event, EventResult, Key, MouseButton, MouseEvent};
 use cursive::theme::{Effect, PaletteColor};
 use cursive::view::{View, ViewWrapper};
@@ -8,6 +7,8 @@ use cursive::{wrap_impl, Printer, Vec2};
 use log::debug;
 use std::fmt::Display;
 use std::hash::Hash;
+
+use crate::panel::Align;
 
 pub trait Bar<K: Hash + Eq + Copy + Display + 'static> {
     fn add_button(&mut self, tx: Sender<K>, key: K);
@@ -39,7 +40,7 @@ impl<T: View, K> PositionWrap<T, K> {
 pub struct TabBar<K: Hash + Eq + Copy + Display + 'static> {
     children: Vec<PositionWrap<Button, K>>,
     bar_size: Vec2,
-    h_align: HAlign,
+    h_align: Align,
     last_rendered_size: Vec2,
     // List of accumulated sizes of prev buttons
     sizes: Vec<Vec2>,
@@ -54,7 +55,7 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabBar<K> {
             children: Vec::new(),
             sizes: Vec::new(),
             idx: None,
-            h_align: HAlign::Left,
+            h_align: Align::Start,
             bar_size: Vec2::zero(),
             last_rendered_size: Vec2::zero(),
             rx,
@@ -62,7 +63,7 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabBar<K> {
         }
     }
 
-    pub fn h_align(mut self, align: HAlign) -> Self {
+    pub fn h_align(mut self, align: Align) -> Self {
         self.h_align = align;
         self.invalidated = true;
         self
