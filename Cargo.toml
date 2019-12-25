@@ -16,6 +16,7 @@ documentation = "https://docs.rs/cursive-tabs"
 cursive = "0.13.0"
 crossbeam = "0.7.2"
 log = "0.4.8"
+num = "0.2.0"
 
 [dev-dependencies]
 serde_json = "1.0.40"

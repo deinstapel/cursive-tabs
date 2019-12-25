@@ -8,7 +8,7 @@ use log::debug;
 use std::fmt::Display;
 use std::hash::Hash;
 
-use crate::panel::Align;
+use crate::panel::{Align, Placement};
 
 pub trait Bar<K: Hash + Eq + Copy + Display + 'static> {
     fn add_button(&mut self, tx: Sender<K>, key: K);
@@ -40,10 +40,11 @@ impl<T: View, K> PositionWrap<T, K> {
 pub struct TabBar<K: Hash + Eq + Copy + Display + 'static> {
     children: Vec<PositionWrap<Button, K>>,
     bar_size: Vec2,
-    h_align: Align,
+    align: Align,
     last_rendered_size: Vec2,
     // List of accumulated sizes of prev buttons
     sizes: Vec<Vec2>,
+    placement: Placement,
     idx: Option<usize>,
     rx: Receiver<K>,
     invalidated: bool,
@@ -55,7 +56,8 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabBar<K> {
             children: Vec::new(),
             sizes: Vec::new(),
             idx: None,
-            h_align: Align::Start,
+            align: Align::Start,
+            placement: Placement::HorizontalTop,
             bar_size: Vec2::zero(),
             last_rendered_size: Vec2::zero(),
             rx,
@@ -63,8 +65,14 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabBar<K> {
         }
     }
 
-    pub fn h_align(mut self, align: Align) -> Self {
-        self.h_align = align;
+    pub fn with_alignment(mut self, align: Align) -> Self {
+        self.align = align;
+        self.invalidated = true;
+        self
+    }
+
+    pub fn with_placement(mut self, placement: Placement) -> Self {
+        self.placement = placement;
         self.invalidated = true;
         self
     }
@@ -89,79 +97,151 @@ impl<K: Hash + Eq + Copy + Display + 'static> Bar<K> for TabBar<K> {
 
 impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
     fn draw(&self, printer: &Printer) {
-        // First draw the complete horizontal line
-        printer.print_hline((0, 0), printer.size.x, "─");
-        printer.print((0, 0), "┌");
-        printer.print((printer.size.x - 1, 0), "┐");
-        // Spacing for padding & crop end
-        let inner_printer = printer
-            .offset((1, 0))
-            // Alignment
-            .offset((
-                self.h_align.get_offset(
-                    self.bar_size.x + self.children.len() + 1,
-                    printer.size.x - 2,
-                ),
-                0,
-            ))
-            .cropped((printer.size.x - 2, printer.size.y));
-        for (idx, child) in self.children.iter().enumerate() {
-            // There is no chainable api...
-            let mut rel_sizes = self.sizes.clone();
-            rel_sizes.truncate(idx);
-            let mut print = inner_printer
-                .offset(
-                    rel_sizes
-                        .iter()
-                        .fold(Vec2::new(0, 0), |acc, x| acc.stack_horizontal(x))
-                        .keep_x(),
-                )
-                // Spacing for first character
-                .offset((idx * 1, 0))
-                .cropped({
-                    if idx == 0 || idx == self.children.len() - 1 {
-                        self.sizes[idx].stack_horizontal(&Vec2::new(2, 1))
-                    } else {
-                        self.sizes[idx].stack_horizontal(&Vec2::new(1, 1))
-                    }
-                });
-            let mut theme = printer.theme.clone();
+        match self.placement {
+            Placement::HorizontalBottom | Placement::HorizontalTop => {
+                // First draw the complete horizontal line
+                printer.print_hline((0, 0), printer.size.x, "─");
+                // Spacing for padding & crop end
+                let inner_printer = printer
+                    // Alignment
+                    .offset((
+                        self.align
+                            .get_offset(self.bar_size.x + self.children.len() + 1, printer.size.x),
+                        0,
+                    ));
+                for (idx, child) in self.children.iter().enumerate() {
+                    // There is no chainable api...
+                    let mut rel_sizes = self.sizes.clone();
+                    rel_sizes.truncate(idx);
+                    let mut print = inner_printer
+                        .offset(
+                            rel_sizes
+                                .iter()
+                                .fold(Vec2::new(0, 0), |acc, x| acc.stack_horizontal(x))
+                                .keep_x(),
+                        )
+                        // Spacing for first character
+                        .offset((idx * 1, 0))
+                        .cropped({
+                            if idx == 0 || idx == self.children.len() - 1 {
+                                self.sizes[idx].stack_horizontal(&Vec2::new(2, 1))
+                            } else {
+                                self.sizes[idx].stack_horizontal(&Vec2::new(1, 1))
+                            }
+                        });
+                    let mut theme = printer.theme.clone();
 
-            if !child.active {
-                let color = theme.palette[PaletteColor::TitleSecondary];
-                theme.palette[PaletteColor::Primary] = color;
-            } else {
-                let color = theme.palette[PaletteColor::TitlePrimary];
-                theme.palette[PaletteColor::Primary] = color;
-            }
-
-            if let Some(focus) = self.idx {
-                print = print.focused(focus == idx);
-            }
-
-            print.with_theme(&theme, |printer| {
-                if idx > 0 {
-                    if child.active || self.children[idx - 1].active {
-                        printer.print((0, 0), "┃")
+                    if !child.active {
+                        let color = theme.palette[PaletteColor::TitleSecondary];
+                        theme.palette[PaletteColor::Primary] = color;
                     } else {
-                        printer.print((0, 0), "│");
+                        let color = theme.palette[PaletteColor::TitlePrimary];
+                        theme.palette[PaletteColor::Primary] = color;
                     }
-                } else {
-                    if child.active {
-                        printer.print((0, 0), "┨")
-                    } else {
-                        printer.print((0, 0), "┤");
+
+                    if let Some(focus) = self.idx {
+                        print = print.focused(focus == idx);
                     }
+
+                    print.with_theme(&theme, |printer| {
+                        if idx > 0 {
+                            if child.active || self.children[idx - 1].active {
+                                printer.print((0, 0), "┃")
+                            } else {
+                                printer.print((0, 0), "│");
+                            }
+                        } else {
+                            if child.active {
+                                printer.print((0, 0), "┨")
+                            } else {
+                                printer.print((0, 0), "┤");
+                            }
+                        }
+                        printer.with_effect(Effect::Bold, |printer| {
+                            child.draw(&printer.offset((1, 0)))
+                        });
+                        if idx == self.children.len() - 1 {
+                            if child.active {
+                                printer.offset((1, 0)).print(self.sizes[idx].keep_x(), "┠");
+                            } else {
+                                printer.offset((1, 0)).print(self.sizes[idx].keep_x(), "├");
+                            }
+                        }
+                    });
                 }
-                printer.with_effect(Effect::Bold, |printer| child.draw(&printer.offset((1, 0))));
-                if idx == self.children.len() - 1 {
-                    if child.active {
-                        printer.offset((1, 0)).print(self.sizes[idx].keep_x(), "┠");
+            }
+            Placement::VerticalLeft | Placement::VerticalRight => {
+                // First draw the complete vertical line
+                printer.print_vline((0, 0), printer.size.x, "│");
+                // Spacing for padding & crop end
+                let inner_printer = printer
+                    // Alignment
+                    .offset((
+                        0,
+                        self.align
+                            .get_offset(self.bar_size.y + self.children.len() + 1, printer.size.y),
+                    ));
+                for (idx, child) in self.children.iter().enumerate() {
+                    // There is no chainable api...
+                    let mut rel_sizes = self.sizes.clone();
+                    rel_sizes.truncate(idx);
+                    let mut print = inner_printer
+                        .offset(
+                            rel_sizes
+                                .iter()
+                                .fold(Vec2::new(0, 0), |acc, x| acc.stack_vertical(x))
+                                .keep_y(),
+                        )
+                        // Spacing for first character
+                        .offset((0, idx * 1))
+                        .cropped({
+                            if idx == 0 || idx == self.children.len() - 1 {
+                                self.sizes[idx].stack_vertical(&Vec2::new(2, 1))
+                            } else {
+                                self.sizes[idx].stack_vertical(&Vec2::new(1, 1))
+                            }
+                        });
+                    let mut theme = printer.theme.clone();
+
+                    if !child.active {
+                        let color = theme.palette[PaletteColor::TitleSecondary];
+                        theme.palette[PaletteColor::Primary] = color;
                     } else {
-                        printer.offset((1, 0)).print(self.sizes[idx].keep_x(), "├");
+                        let color = theme.palette[PaletteColor::TitlePrimary];
+                        theme.palette[PaletteColor::Primary] = color;
                     }
+
+                    if let Some(focus) = self.idx {
+                        print = print.focused(focus == idx);
+                    }
+
+                    print.with_theme(&theme, |printer| {
+                        if idx > 0 {
+                            if child.active || self.children[idx - 1].active {
+                                printer.print((0, 0), "━")
+                            } else {
+                                printer.print((0, 0), "─");
+                            }
+                        } else {
+                            if child.active {
+                                printer.print((0, 0), "┷")
+                            } else {
+                                printer.print((0, 0), "┴");
+                            }
+                        }
+                        printer.with_effect(Effect::Bold, |printer| {
+                            child.draw(&printer.offset((0, 1)))
+                        });
+                        if idx == self.children.len() - 1 {
+                            if child.active {
+                                printer.offset((1, 0)).print(self.sizes[idx].keep_x(), "┯");
+                            } else {
+                                printer.offset((1, 0)).print(self.sizes[idx].keep_x(), "┬");
+                            }
+                        }
+                    });
                 }
-            });
+            }
         }
     }
 
@@ -190,12 +270,20 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
         }
         self.sizes.clear();
         let sizes = &mut self.sizes;
+        let placement = self.placement;
         let total_size = self
             .children
             .iter_mut()
             .fold(Vec2::zero(), |mut acc, child| {
                 let size = child.required_size(cst);
-                acc = acc.stack_horizontal(&size.keep_x());
+                match placement {
+                    Placement::HorizontalBottom | Placement::HorizontalTop => {
+                        acc = acc.stack_horizontal(&size);
+                    }
+                    Placement::VerticalLeft | Placement::VerticalRight => {
+                        acc = acc.stack_vertical(&size);
+                    }
+                }
                 child.pos = acc;
                 sizes.push(size);
                 acc
@@ -203,16 +291,30 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
         // Total size of bar
         self.bar_size = total_size;
         // Return max width and maximum height of child
-        Vec2::new(
-            cst.x,
-            // Maximum height
-            self.sizes.iter().fold(0, |mut val, x| {
-                if val < x.y {
-                    val = x.y;
-                }
-                val
-            }),
-        )
+        match self.placement {
+            Placement::VerticalRight | Placement::VerticalLeft => Vec2::new(
+                // Maximum width
+                self.sizes.iter().fold(0, |mut val, x| {
+                    if val < x.x {
+                        val = x.x;
+                    }
+                    val
+                }),
+                cst.y,
+            ),
+            Placement::HorizontalTop | Placement::HorizontalBottom => {
+                Vec2::new(
+                    cst.x,
+                    // Maximum height
+                    self.sizes.iter().fold(0, |mut val, x| {
+                        if val < x.y {
+                            val = x.y;
+                        }
+                        val
+                    }),
+                )
+            }
+        }
     }
 
     fn on_event(&mut self, evt: Event) -> EventResult {
@@ -228,7 +330,7 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
                         if (child.pos
                             + Vec2::new(idx + 1, 0)
                             + Vec2::new(
-                                self.h_align.get_offset(
+                                self.align.get_offset(
                                     // Length of buttons and delimiting characters
                                     self.bar_size.x + self.children.len() + 1,
                                     self.last_rendered_size.x - 2,

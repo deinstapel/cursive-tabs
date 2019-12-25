@@ -4,6 +4,7 @@ use cursive::event::{AnyCb, Event, EventResult, Key};
 use cursive::view::{Selector, View};
 use cursive::{Printer, Vec2};
 use log::debug;
+use num::clamp;
 use std::fmt::Display;
 use std::hash::Hash;
 
@@ -16,6 +17,14 @@ pub enum Align {
     Start,
     Center,
     End,
+}
+
+#[derive(Clone, Copy, Debug)]
+pub enum Placement {
+    VerticalLeft,
+    VerticalRight,
+    HorizontalTop,
+    HorizontalBottom,
 }
 
 impl Align {
@@ -56,6 +65,7 @@ pub struct TabPanel<K: Hash + Eq + Display + Copy + 'static> {
     active_rx: Receiver<K>,
     bar_focused: bool,
     bar_align: Align,
+    bar_placement: Placement,
 }
 
 impl<K: Hash + Eq + Copy + Display + 'static> TabPanel<K> {
@@ -76,6 +86,7 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabPanel<K> {
             active_rx,
             bar_focused: false,
             bar_align: Align::Start,
+            bar_placement: Placement::HorizontalTop,
         }
     }
 
@@ -164,39 +175,137 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabPanel<K> {
         self.bar_align = align;
     }
 
+    pub fn with_bar_placement(mut self, placement: Placement) -> Self {
+        self.set_bar_placement(placement);
+        self
+    }
+
+    pub fn set_bar_placement(&mut self, placement: Placement) {
+        self.bar_placement = placement;
+    }
+
     /// Returns the current order of tabs as an Vector with the keys of the views.
     pub fn tab_order(&self) -> Vec<K> {
         self.tabs.tab_order()
+    }
+
+    // Print lines corresponding to the current placement
+    fn draw_outer_panel(&self, printer: &Printer) {
+        match self.bar_placement {
+            Placement::HorizontalTop => {
+                // Side bars
+                printer.print_vline((0, 0), printer.size.y, "│");
+                printer.print_vline((printer.size.x - 1, 0), printer.size.y, "│");
+                // Bottom line
+                printer.print_hline((0, printer.size.y - 1), printer.size.x, "─");
+
+                printer.print((0, self.bar_size.y - 1), "┌");
+                printer.print((printer.size.x - 1, self.bar_size.y - 1), "┐");
+                printer.print((0, printer.size.y - 1), "└");
+                printer.print((printer.size.x - 1, printer.size.y - 1), "┘");
+            }
+            Placement::HorizontalBottom => {
+                // Side bars
+                printer.print_vline((0, 0), printer.size.y, "│");
+                printer.print_vline((printer.size.x - 1, 0), printer.size.y, "│");
+                // Top line
+                let lowest = clamp(printer.size.y - self.bar_size.y, 0, printer.size.y - 1);
+                printer.print_hline((0, 0), printer.size.x, "─");
+                printer.print((0, 0), "┌");
+                printer.print((printer.size.x - 1, 0), "┐");
+                printer.print((0, lowest), "└");
+                printer.print((printer.size.x - 1, lowest), "┘");
+            }
+            Placement::VerticalLeft => {
+                // Side bar
+                printer.print_vline((printer.size.x - 1, 0), printer.size.y, "│");
+                // Top lines
+                printer.print_hline((self.bar_size.x - 1, 0), printer.size.x, "─");
+                printer.print_hline(
+                    (self.bar_size.x - 1, printer.size.y - 1),
+                    printer.size.x,
+                    "─",
+                );
+                printer.print((self.bar_size.x - 1, 0), "┌");
+                printer.print((printer.size.x - 1, 0), "┐");
+                printer.print((self.bar_size.x - 1, printer.size.y - 1), "└");
+                printer.print((printer.size.x - 1, printer.size.y - 1), "┘");
+            }
+            Placement::VerticalRight => {
+                // Side bar
+                printer.print_vline((0, 0), printer.size.y, "│");
+                // Top lines
+                printer.print_hline((0, 0), printer.size.x, "─");
+                // Line draws too far here, needs to be overwritten with blanks
+                printer.print_hline((0, printer.size.y - 1), printer.size.x, "─");
+
+                let right = clamp(printer.size.x - self.bar_size.x, 0, printer.size.x - 1);
+                printer.print((0, 0), "┌");
+                printer.print((right, 0), "┐");
+                printer.print((0, printer.size.y - 1), "└");
+                printer.print((right, printer.size.y - 1), "┘");
+            }
+        }
     }
 }
 
 impl<K: Hash + Eq + Copy + std::fmt::Display + 'static> View for TabPanel<K> {
     fn draw(&self, printer: &Printer) {
-        // Side bars
-        printer.print_vline((0, 0), printer.size.y, "│");
-        printer.print_vline((printer.size.x - 1, 0), printer.size.y, "│");
-        // Bottom line
-        printer.print_hline((0, printer.size.y - 1), printer.size.x, "─");
-        // Corners
-        printer.print((0, printer.size.y - 1), "└");
-        printer.print((printer.size.x - 1, printer.size.y - 1), "┘");
+        self.draw_outer_panel(printer);
         let printer_bar = printer
-            .cropped(Vec2::new(printer.size.x, self.bar_size.y))
+            .offset(match self.bar_placement {
+                Placement::HorizontalTop => (1, 0),
+                Placement::HorizontalBottom => (1, printer.size.y - 1),
+                Placement::VerticalLeft => (0, 1),
+                Placement::VerticalRight => (printer.size.x - 1, 1),
+            })
+            .cropped(match self.bar_placement {
+                Placement::HorizontalTop | Placement::HorizontalBottom => {
+                    (printer.size.x - 2, self.bar_size.y)
+                }
+                Placement::VerticalRight | Placement::VerticalLeft => {
+                    (self.bar_size.x, printer.size.y - 2)
+                }
+            })
             .focused(self.bar_focused);
         let printer_tab = printer
-            .offset(Vec2::new(1, self.bar_size.y))
+            .offset(match self.bar_placement {
+                Placement::VerticalLeft => (self.bar_size.x, 1),
+                Placement::VerticalRight => (1, 1),
+                Placement::HorizontalBottom => (1, 1),
+                Placement::HorizontalTop => (1, self.bar_size.y),
+            })
             // Inner area
-            .cropped((printer.size.x - 2, printer.size.y - self.bar_size.y - 1))
+            .cropped(match self.bar_placement {
+                Placement::VerticalLeft | Placement::VerticalRight => {
+                    (printer.size.x - self.bar_size.x - 1, printer.size.y - 2)
+                }
+                Placement::HorizontalBottom | Placement::HorizontalTop => {
+                    (printer.size.x - 2, printer.size.y - self.bar_size.y - 1)
+                }
+            })
             .focused(!self.bar_focused);
         self.bar.draw(&printer_bar);
         self.tabs.draw(&printer_tab);
     }
 
     fn layout(&mut self, vec: Vec2) {
-        self.bar.layout(Vec2::new(vec.x, self.bar_size.y));
-        self.tabs
-            // Retract panel size
-            .layout(Vec2::new(vec.x - 2, vec.y - self.bar_size.y - 1));
+        self.bar.layout(match self.bar_placement {
+            Placement::VerticalRight | Placement::VerticalLeft => {
+                Vec2::new(self.bar_size.x, vec.y - 2)
+            }
+            Placement::HorizontalBottom | Placement::HorizontalTop => {
+                Vec2::new(vec.x - 2, self.bar_size.y)
+            }
+        });
+        self.tabs.layout(match self.bar_placement {
+            Placement::VerticalRight | Placement::VerticalLeft => {
+                Vec2::new(vec.x - self.bar_size.x - 1, vec.y - 2)
+            }
+            Placement::HorizontalBottom | Placement::HorizontalTop => {
+                Vec2::new(vec.x - 2, vec.y - self.bar_size.y - 1)
+            }
+        });
     }
 
     fn needs_relayout(&self) -> bool {
@@ -206,7 +315,9 @@ impl<K: Hash + Eq + Copy + std::fmt::Display + 'static> View for TabPanel<K> {
     fn required_size(&mut self, cst: Vec2) -> Vec2 {
         if self.order != self.tab_order() {
             debug!("Rebuilding TabBar");
-            self.bar = TabBar::new(self.active_rx.clone()).h_align(self.bar_align);
+            self.bar = TabBar::new(self.active_rx.clone())
+                .with_alignment(self.bar_align)
+                .with_placement(self.bar_placement);
             for key in self.tab_order() {
                 self.bar.add_button(self.tx.clone(), key);
             }
@@ -275,17 +386,31 @@ impl<K: Hash + Eq + Copy + std::fmt::Display + 'static> View for TabPanel<K> {
     }
 
     fn take_focus(&mut self, d: Direction) -> bool {
-        match d {
-            Direction::Abs(Absolute::Down) => {
-                if self.tabs.take_focus(d) {
-                    self.bar_focused = false;
-                } else {
-                    self.bar_focused = true;
-                }
+        let tabs_take_focus = |panel: &mut TabPanel<K>, d: Direction| {
+            if panel.tabs.take_focus(d) {
+                panel.bar_focused = false;
+            } else {
+                panel.bar_focused = true;
             }
-            _ => {
-                self.bar_focused = true;
-            }
+        };
+
+        match self.bar_placement {
+            Placement::HorizontalBottom => match d {
+                Direction::Abs(Absolute::Up) => tabs_take_focus(self, d),
+                _ => self.bar_focused = true,
+            },
+            Placement::HorizontalTop => match d {
+                Direction::Abs(Absolute::Down) => tabs_take_focus(self, d),
+                _ => self.bar_focused = true,
+            },
+            Placement::VerticalLeft => match d {
+                Direction::Abs(Absolute::Right) => tabs_take_focus(self, d),
+                _ => self.bar_focused = true,
+            },
+            Placement::VerticalRight => match d {
+                Direction::Abs(Absolute::Left) => tabs_take_focus(self, d),
+                _ => self.bar_focused = true,
+            },
         }
         true
     }

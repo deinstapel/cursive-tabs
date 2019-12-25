@@ -53,7 +53,7 @@ mod panel;
 
 // Reexports
 use bar::{Bar, TabBar};
-pub use panel::{Align, TabPanel};
+pub use panel::{Align, Placement, TabPanel};
 
 /// Main struct which manages views
 pub struct TabView<K: Hash> {
