@@ -172,7 +172,11 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
             }
             Placement::VerticalLeft | Placement::VerticalRight => {
                 // First draw the complete vertical line
-                printer.print_vline((0, 0), printer.size.x, "│");
+                let horizontal_offset = match self.placement {
+                    Placement::VerticalLeft => printer.size.x - 1,
+                    _ => 0,
+                };
+                printer.print_vline((horizontal_offset, 0), printer.size.y, "│");
                 // Spacing for padding & crop end
                 let inner_printer = printer
                     // Alignment
@@ -196,7 +200,7 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
                         .offset((0, idx * 1))
                         .cropped({
                             if idx == 0 || idx == self.children.len() - 1 {
-                                self.sizes[idx].stack_vertical(&Vec2::new(2, 1))
+                                self.sizes[idx].stack_vertical(&Vec2::new(1, 2))
                             } else {
                                 self.sizes[idx].stack_vertical(&Vec2::new(1, 1))
                             }
@@ -214,30 +218,40 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
                     if let Some(focus) = self.idx {
                         print = print.focused(focus == idx);
                     }
-
                     print.with_theme(&theme, |printer| {
                         if idx > 0 {
                             if child.active || self.children[idx - 1].active {
-                                printer.print((0, 0), "━")
+                                printer.print_hline((0, 0), printer.size.x, "━");
                             } else {
-                                printer.print((0, 0), "─");
+                                printer.print_hline((0, 0), printer.size.x, "─");
                             }
                         } else {
                             if child.active {
-                                printer.print((0, 0), "┷")
+                                printer.print_hline((0, 0), printer.size.x, "━");
+                                printer.print((horizontal_offset, 0), "┷")
                             } else {
-                                printer.print((0, 0), "┴");
+                                printer.print_hline((0, 0), printer.size.x, "─");
+                                printer.print((horizontal_offset, 0), "┴");
                             }
                         }
                         printer.with_effect(Effect::Bold, |printer| {
                             child.draw(&printer.offset((0, 1)))
                         });
                         if idx == self.children.len() - 1 {
+                            let delim: &str;
+                            let connector: &str;
                             if child.active {
-                                printer.offset((1, 0)).print(self.sizes[idx].keep_x(), "┯");
+                                delim = "━";
+                                connector = "┯";
                             } else {
-                                printer.offset((1, 0)).print(self.sizes[idx].keep_x(), "┬");
+                                delim = "─";
+                                connector = "┬";
                             }
+                            printer.print_hline((0, printer.size.y - 1), printer.size.x, delim);
+                            printer.print(
+                                self.sizes[idx].keep_y() + Vec2::new(horizontal_offset, 1),
+                                connector,
+                            );
                         }
                     });
                 }

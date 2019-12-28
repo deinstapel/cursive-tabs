@@ -31,14 +31,14 @@ fn main() {
         .with_tab(2, TextView::new(TAB_2))
         .with_tab(3, TextView::new(TAB_3))
         .with_tab(4, PaddedView::new((2, 2, 1, 1), TextArea::new()))
-        .with_bar_alignment(Align::Start)
-        .with_bar_placement(Placement::VerticalLeft)
+        .with_bar_alignment(Align::End)
+        .with_bar_placement(Placement::HorizontalBottom)
         .with_active_tab(0)
         .expect("oh no");
 
     siv.add_layer(
         LinearLayout::vertical()
-            .child(panel.with_id("Tabs").fixed_size((50, 30)))
+            .child(panel.with_id("Tabs").fixed_size((50, 10)))
             .child(
                 LinearLayout::horizontal()
                     .child(Button::new("Prev", |siv| {

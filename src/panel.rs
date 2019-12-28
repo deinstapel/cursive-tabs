@@ -19,7 +19,7 @@ pub enum Align {
     End,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Placement {
     VerticalLeft,
     VerticalRight,
@@ -242,8 +242,10 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabPanel<K> {
                 let right = clamp(printer.size.x - self.bar_size.x, 0, printer.size.x - 1);
                 printer.print((0, 0), "┌");
                 printer.print((right, 0), "┐");
+                printer.print_hline((right + 1, 0), printer.size.x, " ");
                 printer.print((0, printer.size.y - 1), "└");
                 printer.print((right, printer.size.y - 1), "┘");
+                printer.print_hline((right + 1, printer.size.y - 1), printer.size.x, " ");
             }
         }
     }
@@ -255,9 +257,15 @@ impl<K: Hash + Eq + Copy + std::fmt::Display + 'static> View for TabPanel<K> {
         let printer_bar = printer
             .offset(match self.bar_placement {
                 Placement::HorizontalTop => (1, 0),
-                Placement::HorizontalBottom => (1, printer.size.y - 1),
+                Placement::HorizontalBottom => (
+                    1,
+                    clamp(printer.size.y - self.bar_size.y, 0, printer.size.y - 1),
+                ),
                 Placement::VerticalLeft => (0, 1),
-                Placement::VerticalRight => (printer.size.x - 1, 1),
+                Placement::VerticalRight => (
+                    clamp(printer.size.x - self.bar_size.x, 0, printer.size.x - 1),
+                    1,
+                ),
             })
             .cropped(match self.bar_placement {
                 Placement::HorizontalTop | Placement::HorizontalBottom => {
@@ -357,13 +365,42 @@ impl<K: Hash + Eq + Copy + std::fmt::Display + 'static> View for TabPanel<K> {
             match self.bar.on_event(evt.clone()) {
                 EventResult::Consumed(cb) => EventResult::Consumed(cb),
                 EventResult::Ignored => match evt {
-                    Event::Key(Key::Down) => match self.tabs.take_focus(Direction::up()) {
-                        true => {
-                            self.bar_focused = false;
-                            EventResult::Consumed(None)
+                    Event::Key(Key::Down) if self.bar_placement == Placement::HorizontalTop => {
+                        match self.tabs.take_focus(Direction::up()) {
+                            true => {
+                                self.bar_focused = false;
+                                EventResult::Consumed(None)
+                            }
+                            false => EventResult::Ignored,
                         }
-                        false => EventResult::Ignored,
-                    },
+                    }
+                    Event::Key(Key::Up) if self.bar_placement == Placement::HorizontalBottom => {
+                        match self.tabs.take_focus(Direction::down()) {
+                            true => {
+                                self.bar_focused = false;
+                                EventResult::Consumed(None)
+                            }
+                            false => EventResult::Ignored,
+                        }
+                    }
+                    Event::Key(Key::Left) if self.bar_placement == Placement::VerticalRight => {
+                        match self.tabs.take_focus(Direction::right()) {
+                            true => {
+                                self.bar_focused = false;
+                                EventResult::Consumed(None)
+                            }
+                            false => EventResult::Ignored,
+                        }
+                    }
+                    Event::Key(Key::Right) if self.bar_placement == Placement::VerticalLeft => {
+                        match self.tabs.take_focus(Direction::left()) {
+                            true => {
+                                self.bar_focused = false;
+                                EventResult::Consumed(None)
+                            }
+                            false => EventResult::Ignored,
+                        }
+                    }
                     _ => EventResult::Ignored,
                 },
             }
@@ -371,13 +408,21 @@ impl<K: Hash + Eq + Copy + std::fmt::Display + 'static> View for TabPanel<K> {
             match self.tabs.on_event(evt.relativized((0, self.bar_size.y))) {
                 EventResult::Consumed(cb) => EventResult::Consumed(cb),
                 EventResult::Ignored => match evt {
-                    Event::Key(Key::Up) => {
+                    Event::Key(Key::Up) if self.bar_placement == Placement::HorizontalTop => {
                         self.bar_focused = true;
-                        if self.tabs.take_focus(Direction::up()) {
-                            EventResult::Consumed(None)
-                        } else {
-                            EventResult::Ignored
-                        }
+                        EventResult::Consumed(None)
+                    }
+                    Event::Key(Key::Down) if self.bar_placement == Placement::HorizontalBottom => {
+                        self.bar_focused = true;
+                        EventResult::Consumed(None)
+                    }
+                    Event::Key(Key::Left) if self.bar_placement == Placement::VerticalLeft => {
+                        self.bar_focused = true;
+                        EventResult::Consumed(None)
+                    }
+                    Event::Key(Key::Right) if self.bar_placement == Placement::VerticalRight => {
+                        self.bar_focused = true;
+                        EventResult::Consumed(None)
                     }
                     _ => EventResult::Ignored,
                 },
