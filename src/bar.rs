@@ -76,6 +76,34 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabBar<K> {
         self.invalidated = true;
         self
     }
+
+    fn decrement_idx(&mut self) -> EventResult {
+        if let Some(index) = self.idx {
+            if index > 0 {
+                self.idx = Some(index - 1);
+                self.invalidated = true;
+                EventResult::Consumed(None)
+            } else {
+                EventResult::Ignored
+            }
+        } else {
+            EventResult::Ignored
+        }
+    }
+
+    fn increment_idx(&mut self) -> EventResult {
+        if let Some(index) = self.idx {
+            if (index + 1) < self.children.len() {
+                self.idx = Some(index + 1);
+                self.invalidated = true;
+                EventResult::Consumed(None)
+            } else {
+                EventResult::Ignored
+            }
+        } else {
+            EventResult::Ignored
+        }
+    }
 }
 
 impl<K: Hash + Eq + Copy + Display + 'static> Bar<K> for TabBar<K> {
@@ -380,31 +408,29 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
         }
 
         match evt {
-            Event::Key(Key::Left) => {
-                if let Some(index) = self.idx {
-                    if index > 0 {
-                        self.idx = Some(index - 1);
-                        self.invalidated = true;
-                        EventResult::Consumed(None)
-                    } else {
-                        EventResult::Ignored
-                    }
-                } else {
-                    EventResult::Ignored
-                }
+            Event::Key(Key::Left)
+                if self.placement == Placement::HorizontalBottom
+                    || self.placement == Placement::HorizontalTop =>
+            {
+                self.decrement_idx()
             }
-            Event::Key(Key::Right) => {
-                if let Some(index) = self.idx {
-                    if index == (self.children.len() - 1) {
-                        EventResult::Ignored
-                    } else {
-                        self.idx = Some(index + 1);
-                        self.invalidated = true;
-                        EventResult::Consumed(None)
-                    }
-                } else {
-                    EventResult::Ignored
-                }
+            Event::Key(Key::Up)
+                if self.placement == Placement::VerticalLeft
+                    || self.placement == Placement::VerticalRight =>
+            {
+                self.decrement_idx()
+            }
+            Event::Key(Key::Right)
+                if self.placement == Placement::HorizontalBottom
+                    || self.placement == Placement::HorizontalTop =>
+            {
+                self.increment_idx()
+            }
+            Event::Key(Key::Down)
+                if self.placement == Placement::VerticalLeft
+                    || self.placement == Placement::VerticalRight =>
+            {
+                self.increment_idx()
             }
             _ => EventResult::Ignored,
         }
