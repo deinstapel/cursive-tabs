@@ -84,7 +84,7 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabPanel<K> {
             tabs,
             tx,
             active_rx,
-            bar_focused: false,
+            bar_focused: true,
             bar_align: Align::Start,
             bar_placement: Placement::HorizontalTop,
         }
@@ -442,19 +442,43 @@ impl<K: Hash + Eq + Copy + std::fmt::Display + 'static> View for TabPanel<K> {
         match self.bar_placement {
             Placement::HorizontalBottom => match d {
                 Direction::Abs(Absolute::Up) => tabs_take_focus(self, d),
-                _ => self.bar_focused = true,
+                Direction::Abs(Absolute::Left) | Direction::Abs(Absolute::Right) => {
+                    if !self.bar_focused {
+                        tabs_take_focus(self, d)
+                    }
+                }
+                Direction::Abs(Absolute::Down) => self.bar_focused = true,
+                _ => {}
             },
             Placement::HorizontalTop => match d {
                 Direction::Abs(Absolute::Down) => tabs_take_focus(self, d),
-                _ => self.bar_focused = true,
+                Direction::Abs(Absolute::Left) | Direction::Abs(Absolute::Right) => {
+                    if !self.bar_focused {
+                        tabs_take_focus(self, d)
+                    }
+                }
+                Direction::Abs(Absolute::Up) => self.bar_focused = true,
+                _ => {}
             },
             Placement::VerticalLeft => match d {
                 Direction::Abs(Absolute::Right) => tabs_take_focus(self, d),
-                _ => self.bar_focused = true,
+                Direction::Abs(Absolute::Up) | Direction::Abs(Absolute::Down) => {
+                    if !self.bar_focused {
+                        tabs_take_focus(self, d)
+                    }
+                }
+                Direction::Abs(Absolute::Left) => self.bar_focused = true,
+                _ => {}
             },
             Placement::VerticalRight => match d {
                 Direction::Abs(Absolute::Left) => tabs_take_focus(self, d),
-                _ => self.bar_focused = true,
+                Direction::Abs(Absolute::Up) | Direction::Abs(Absolute::Down) => {
+                    if !self.bar_focused {
+                        tabs_take_focus(self, d)
+                    }
+                }
+                Direction::Abs(Absolute::Right) => self.bar_focused = true,
+                _ => {}
             },
         }
         true
