@@ -369,16 +369,32 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
                 let mut iter = self.children.iter().peekable().enumerate();
                 while let Some((idx, child)) = iter.next() {
                     if position.checked_sub(offset).is_some() {
-                        if (child.pos
-                            + Vec2::new(idx + 1, 0)
-                            + Vec2::new(
-                                self.align.get_offset(
-                                    // Length of buttons and delimiting characters
-                                    self.bar_size.x + self.children.len() + 1,
-                                    self.last_rendered_size.x - 2,
-                                ),
-                                0,
-                            ))
+                        if (match self.placement {
+                            Placement::HorizontalBottom | Placement::HorizontalTop => {
+                                child.pos
+                                    + Vec2::new(idx + 1, 0)
+                                    + Vec2::new(
+                                        self.align.get_offset(
+                                            // Length of buttons and delimiting characters
+                                            self.bar_size.x + self.children.len() + 1,
+                                            self.last_rendered_size.x,
+                                        ),
+                                        0,
+                                    )
+                            }
+                            Placement::VerticalLeft | Placement::VerticalRight => {
+                                child.pos
+                                    + Vec2::new(0, idx + 1)
+                                    + Vec2::new(
+                                        0,
+                                        self.align.get_offset(
+                                            // Length of buttons and delimiting characters
+                                            self.bar_size.y + self.children.len() + 1,
+                                            self.last_rendered_size.y,
+                                        ),
+                                    )
+                            }
+                        })
                         .fits(position - offset)
                         {
                             match event {

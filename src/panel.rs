@@ -60,6 +60,7 @@ pub struct TabPanel<K: Hash + Eq + Display + Copy + 'static> {
     order: Vec<K>,
     bar: TabBar<K>,
     bar_size: Vec2,
+    tab_size: Vec2,
     tx: Sender<K>,
     tabs: TabView<K>,
     active_rx: Receiver<K>,
@@ -81,6 +82,7 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabPanel<K> {
             order: Vec::new(),
             bar: TabBar::new(active_rx.clone()),
             bar_size: Vec2::new(1, 1),
+            tab_size: Vec2::new(1, 1),
             tabs,
             tx,
             active_rx,
@@ -308,10 +310,12 @@ impl<K: Hash + Eq + Copy + std::fmt::Display + 'static> View for TabPanel<K> {
         });
         self.tabs.layout(match self.bar_placement {
             Placement::VerticalRight | Placement::VerticalLeft => {
-                Vec2::new(vec.x - self.bar_size.x - 1, vec.y - 2)
+                self.tab_size = Vec2::new(vec.x - self.bar_size.x - 1, vec.y - 2);
+                self.tab_size
             }
             Placement::HorizontalBottom | Placement::HorizontalTop => {
-                Vec2::new(vec.x - 2, vec.y - self.bar_size.y - 1)
+                self.tab_size = Vec2::new(vec.x - 2, vec.y - self.bar_size.y - 1);
+                self.tab_size
             }
         });
     }
@@ -350,11 +354,28 @@ impl<K: Hash + Eq + Copy + std::fmt::Display + 'static> View for TabPanel<K> {
                     "mouse event: offset: {:?} , position: {:?}",
                     offset, position
                 );
-                if position > offset {
-                    if (position - offset).fits_in(self.bar_size) {
-                        self.bar_focused = true;
-                    } else {
-                        self.bar_focused = false;
+                match self.bar_placement {
+                    Placement::VerticalRight | Placement::HorizontalBottom => {
+                        if position > offset && self.tab_size.fits(position - offset) {
+                            if self.tabs.take_focus(Direction::front()) {
+                                self.bar_focused = false;
+                            }
+                        } else {
+                            self.bar_focused = true;
+                        }
+                    }
+                    Placement::HorizontalTop | Placement::VerticalLeft => {
+                        // We need to compare each individual value since the comparions with `>=` on the XY struct dPartialOrdoes not work as expected. When one value is the same but the other not it does not match although it should.
+                        if position.x >= offset.x
+                            && position.y >= offset.y
+                            && (self.bar_size - Vec2::new(1, 1)).fits(position - offset)
+                        {
+                            self.bar_focused = true;
+                        } else {
+                            if self.tabs.take_focus(Direction::front()) {
+                                self.bar_focused = false;
+                            }
+                        }
                     }
                 }
             }
@@ -362,7 +383,13 @@ impl<K: Hash + Eq + Copy + std::fmt::Display + 'static> View for TabPanel<K> {
         }
 
         if self.bar_focused {
-            match self.bar.on_event(evt.clone()) {
+            match self
+                .bar
+                .on_event(evt.clone().relativized(match self.bar_placement {
+                    Placement::HorizontalTop | Placement::VerticalLeft => Vec2::new(0, 0),
+                    Placement::HorizontalBottom => self.tab_size.keep_y() + Vec2::new(0, 1),
+                    Placement::VerticalRight => self.tab_size.keep_x() + Vec2::new(1, 0),
+                })) {
                 EventResult::Consumed(cb) => EventResult::Consumed(cb),
                 EventResult::Ignored => match evt {
                     Event::Key(Key::Down) if self.bar_placement == Placement::HorizontalTop => {
@@ -405,7 +432,13 @@ impl<K: Hash + Eq + Copy + std::fmt::Display + 'static> View for TabPanel<K> {
                 },
             }
         } else {
-            match self.tabs.on_event(evt.relativized((0, self.bar_size.y))) {
+            match self
+                .tabs
+                .on_event(evt.relativized(match self.bar_placement {
+                    Placement::HorizontalTop => Vec2::new(1, self.bar_size.y),
+                    Placement::VerticalLeft => Vec2::new(self.bar_size.x, 1),
+                    Placement::HorizontalBottom | Placement::VerticalRight => Vec2::new(1, 1),
+                })) {
                 EventResult::Consumed(cb) => EventResult::Consumed(cb),
                 EventResult::Ignored => match evt {
                     Event::Key(Key::Up) if self.bar_placement == Placement::HorizontalTop => {
