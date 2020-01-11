@@ -28,6 +28,62 @@ exports[`smoke tests the tab panel 1`] = `
 "
 `;
 
+exports[`tests initialization and rendering of left placed bar 1`] = `
+"                                                                                
+                                          ┌─────┐                               
+                                          │Pshhh│                               
+                                          │h    │                               
+                                          │     │                               
+                                          │     │                               
+                                          │     │                               
+                                          │     │                               
+                                          │     │                               
+                                          │     │                               
+                              ━━━━━━━━━━━━┷     │                               
+                               Stronk test      │                               
+                              ━━━━━━━━━━━━┯     │                               
+                                          │     │                               
+                                          │     │                               
+                                          │     │                               
+                                          │     │                               
+                                          │     │                               
+                                          │     │                               
+                                          │     │                               
+                                          │     │                               
+                                          │     │                               
+                                          └─────┘                               
+                                                                                
+"
+`;
+
+exports[`tests initialization and rendering of right placed bar 1`] = `
+"                                                                                
+                              ┌─────┐                                           
+                              │Pshhh│                                           
+                              │h    │                                           
+                              │     │                                           
+                              │     │                                           
+                              │     │                                           
+                              │     │                                           
+                              │     │                                           
+                              │     │                                           
+                              │     ┷━━━━━━━━━━━━                               
+                              │      Stronk test                                
+                              │     ┯━━━━━━━━━━━━                               
+                              │     │                                           
+                              │     │                                           
+                              │     │                                           
+                              │     │                                           
+                              │     │                                           
+                              │     │                                           
+                              │     │                                           
+                              │     │                                           
+                              │     │                                           
+                              └─────┘                                           
+                                                                                
+"
+`;
+
 exports[`tests inserting tabs at defined position 1`] = `
 "                                                                                
                                                                                 

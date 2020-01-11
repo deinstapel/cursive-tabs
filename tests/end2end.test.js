@@ -24,6 +24,8 @@ function cargo_e2e(name, custom) {
 it('tests removal of a currently active tab', cargo_e2e('remove_active'));
 it('tests removal of a currently inactive tab', cargo_e2e('remove_inactive'));
 it('tests switching tabs', cargo_e2e('switch'));
+it('tests initialization and rendering of left placed bar', cargo_e2e('vertical_left'));
+it('tests initialization and rendering of right placed bar', cargo_e2e('vertical_right'));
 it('tests inserting tabs at defined position', cargo_e2e('add_at'));
 it('tests inserting tabs at defined position in panel', cargo_e2e('add_at_panel'));
 it('smoke tests the tab panel', cargo_e2e('panel_smoke'));
