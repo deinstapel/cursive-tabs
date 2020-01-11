@@ -337,10 +337,16 @@ impl<K: Hash + Eq + Copy + std::fmt::Display + 'static> View for TabPanel<K> {
         }
         let tab_size = self.tabs.required_size(cst);
         self.bar_size = self.bar.required_size(cst);
-        self.bar_size
-            .stack_vertical(&tab_size)
-            // Offset for box drawing characters
-            .stack_vertical(&Vec2::new(tab_size.x + 2, 1))
+        match self.bar_placement {
+            Placement::HorizontalTop | Placement::HorizontalBottom => self
+                .bar_size
+                .stack_vertical(&tab_size)
+                .stack_vertical(&Vec2::new(tab_size.x + 2, 1)),
+            Placement::VerticalLeft | Placement::VerticalRight => self
+                .bar_size
+                .stack_horizontal(&tab_size)
+                .stack_vertical(&Vec2::new(1, tab_size.y + 2)),
+        }
     }
 
     fn on_event(&mut self, evt: Event) -> EventResult {
