@@ -30,28 +30,28 @@ exports[`smoke tests the tab panel 1`] = `
 
 exports[`tests initialization and rendering of left placed bar 1`] = `
 "                                                                                
-                                          ┌─────┐                               
-                                          │Pshhh│                               
-                                          │h    │                               
-                                          │     │                               
-                                          │     │                               
-                                          │     │                               
-                                          │     │                               
-                                          │     │                               
-                                          │     │                               
-                              ━━━━━━━━━━━━┷     │                               
-                               Stronk test      │                               
-                              ━━━━━━━━━━━━┯     │                               
-                                          │     │                               
-                                          │     │                               
-                                          │     │                               
-                                          │     │                               
-                                          │     │                               
-                                          │     │                               
-                                          │     │                               
-                                          │     │                               
-                                          │     │                               
-                                          └─────┘                               
+                                           ┌─────┐                              
+                                           │Pshhh│                              
+                                           │h    │                              
+                                           │     │                              
+                                           │     │                              
+                                           │     │                              
+                                           │     │                              
+                                           │     │                              
+                             ━━━━━━━━━━━━━ │     │                              
+                              Stronk test  │     │                              
+                             ━━━━━━━━━━━━━━━     │                              
+                              Stronker test      │                              
+                             ──────────────┬     │                              
+                                           │     │                              
+                                           │     │                              
+                                           │     │                              
+                                           │     │                              
+                                           │     │                              
+                                           │     │                              
+                                           │     │                              
+                                           │     │                              
+                                           └─────┘                              
                                                                                 
 "
 `;
@@ -209,6 +209,62 @@ exports[`tests switching tabs 1`] = `
                                                                                 
                                                                                 
                                      First                                      
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+"
+`;
+
+exports[`tests the sending of keys in vertical mode 1`] = `
+"                                                                                
+                                           ┌─────┐                              
+                                           │Pshhh│                              
+                                           │h    │                              
+                                           │     │                              
+                                           │     │                              
+                                           │     │                              
+                                           │     │                              
+                                           │     │                              
+                             ━━━━━━━━━━━━━ │     │                              
+                              Stronk test  │     │                              
+                             ━━━━━━━━━━━━━━━     │                              
+                              Stronker test      │                              
+                             ──────────────┬     │                              
+                                           │     │                              
+                                           │     │                              
+                                           │     │                              
+                                           │     │                              
+                                           │     │                              
+                                           │     │                              
+                                           │     │                              
+                                           │     │                              
+                                           └─────┘                              
+                                                                                
+"
+`;
+
+exports[`tests the sending of keys in vertical mode 2`] = `
+"                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                     Second                                     
                                                                                 
                                                                                 
                                                                                 
