@@ -328,9 +328,9 @@ impl<K: Hash + Eq + Copy + 'static> View for TabView<K> {
         }
     }
 
-    fn call_on_any<'a>(&mut self, slt: &Selector, mut cb: AnyCb<'a>) {
+    fn call_on_any<'a>(&mut self, slt: &Selector, cb: AnyCb<'a>) {
         for (_, view) in self.map.iter_mut() {
-            view.call_on_any(slt, Box::new(|any| cb(any)));
+            view.call_on_any(slt, cb);
         }
     }
 

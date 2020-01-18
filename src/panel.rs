@@ -527,8 +527,8 @@ impl<K: Hash + Eq + Copy + std::fmt::Display + 'static> View for TabPanel<K> {
         self.tabs.focus_view(slt)
     }
 
-    fn call_on_any<'a>(&mut self, slt: &Selector, mut cb: AnyCb<'a>) {
-        self.bar.call_on_any(slt, Box::new(|any| cb(any)));
-        self.tabs.call_on_any(slt, Box::new(|any| cb(any)));
+    fn call_on_any<'a>(&mut self, slt: &Selector, cb: AnyCb<'a>) {
+        self.bar.call_on_any(slt, cb);
+        self.tabs.call_on_any(slt, cb);
     }
 }

@@ -13,7 +13,7 @@ documentation = "https://docs.rs/cursive-tabs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-cursive = "0.13.0"
+cursive = "~0.14"
 crossbeam = "0.7.2"
 log = "0.4.8"
 num = "0.2.0"
