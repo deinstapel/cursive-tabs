@@ -69,6 +69,12 @@ pub struct TabPanel<K: Hash + Eq + Display + Copy + 'static> {
     bar_placement: Placement,
 }
 
+impl<K: Hash + Eq + Copy + Display + 'static> Default for TabPanel<K> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<K: Hash + Eq + Copy + Display + 'static> TabPanel<K> {
     /// Returns a new instance of a TabPanel.
     /// Alignment is set by default to left, to change this use `set_bar_alignment` to change to any other `HAlign` provided by `cursive`.
@@ -251,6 +257,84 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabPanel<K> {
             }
         }
     }
+
+    fn on_event_focused(&mut self, evt: Event) -> EventResult {
+        match self
+            .bar
+            .on_event(evt.clone().relativized(match self.bar_placement {
+                Placement::HorizontalTop | Placement::VerticalLeft => Vec2::new(0, 0),
+                Placement::HorizontalBottom => self.tab_size.keep_y() + Vec2::new(0, 1),
+                Placement::VerticalRight => self.tab_size.keep_x() + Vec2::new(1, 0),
+            })) {
+            EventResult::Consumed(cb) => EventResult::Consumed(cb),
+            EventResult::Ignored => match evt {
+                Event::Key(Key::Down) if self.bar_placement == Placement::HorizontalTop => {
+                    if self.tabs.take_focus(Direction::up()) {
+                        self.bar_focused = false;
+                        EventResult::Consumed(None)
+                    } else {
+                        EventResult::Ignored
+                    }
+                }
+                Event::Key(Key::Up) if self.bar_placement == Placement::HorizontalBottom => {
+                    if self.tabs.take_focus(Direction::down()) {
+                        self.bar_focused = false;
+                        EventResult::Consumed(None)
+                    } else {
+                        EventResult::Ignored
+                    }
+                }
+                Event::Key(Key::Left) if self.bar_placement == Placement::VerticalRight => {
+                    if self.tabs.take_focus(Direction::right()) {
+                        self.bar_focused = false;
+                        EventResult::Consumed(None)
+                    } else {
+                        EventResult::Ignored
+                    }
+                }
+                Event::Key(Key::Right) if self.bar_placement == Placement::VerticalLeft => {
+                    if self.tabs.take_focus(Direction::left()) {
+                        self.bar_focused = false;
+                        EventResult::Consumed(None)
+                    } else {
+                        EventResult::Ignored
+                    }
+                }
+                _ => EventResult::Ignored,
+            },
+        }
+    }
+
+    fn on_event_unfocused(&mut self, evt: Event) -> EventResult {
+        match self
+            .tabs
+            .on_event(evt.relativized(match self.bar_placement {
+                Placement::HorizontalTop => Vec2::new(1, self.bar_size.y),
+                Placement::VerticalLeft => Vec2::new(self.bar_size.x, 1),
+                Placement::HorizontalBottom | Placement::VerticalRight => Vec2::new(1, 1),
+            })) {
+            EventResult::Consumed(cb) => EventResult::Consumed(cb),
+            EventResult::Ignored => match evt {
+                Event::Key(Key::Up) if self.bar_placement == Placement::HorizontalTop => {
+                    self.bar_focused = true;
+                    EventResult::Consumed(None)
+                }
+                Event::Key(Key::Down) if self.bar_placement == Placement::HorizontalBottom => {
+                    self.bar_focused = true;
+                    EventResult::Consumed(None)
+                }
+                Event::Key(Key::Left) if self.bar_placement == Placement::VerticalLeft => {
+                    self.bar_focused = true;
+                    EventResult::Consumed(None)
+                }
+                Event::Key(Key::Right) if self.bar_placement == Placement::VerticalRight => {
+                    self.bar_focused = true;
+                    EventResult::Consumed(None)
+                }
+                _ => EventResult::Ignored,
+            },
+        }
+    }
 }
 
 impl<K: Hash + Eq + Copy + std::fmt::Display + 'static> View for TabPanel<K> {
@@ -350,122 +434,42 @@ impl<K: Hash + Eq + Copy + std::fmt::Display + 'static> View for TabPanel<K> {
     }
 
     fn on_event(&mut self, evt: Event) -> EventResult {
-        match evt.clone() {
-            Event::Mouse {
-                offset,
-                position,
-                event: _,
-            } => {
-                debug!(
-                    "mouse event: offset: {:?} , position: {:?}",
-                    offset, position
-                );
-                match self.bar_placement {
-                    Placement::VerticalRight | Placement::HorizontalBottom => {
-                        if position > offset && self.tab_size.fits(position - offset) {
-                            if self.tabs.take_focus(Direction::front()) {
-                                self.bar_focused = false;
-                            }
-                        } else {
-                            self.bar_focused = true;
+        if let Event::Mouse {
+            offset, position, ..
+        } = evt
+        {
+            debug!(
+                "mouse event: offset: {:?} , position: {:?}",
+                offset, position
+            );
+            match self.bar_placement {
+                Placement::VerticalRight | Placement::HorizontalBottom => {
+                    if position > offset && self.tab_size.fits(position - offset) {
+                        if self.tabs.take_focus(Direction::front()) {
+                            self.bar_focused = false;
                         }
+                    } else {
+                        self.bar_focused = true;
                     }
-                    Placement::HorizontalTop | Placement::VerticalLeft => {
-                        // We need to compare each individual value since the comparions with `>=` on the XY struct dPartialOrdoes not work as expected. When one value is the same but the other not it does not match although it should.
-                        if position.x >= offset.x
-                            && position.y >= offset.y
-                            && (self.bar_size - Vec2::new(1, 1)).fits(position - offset)
-                        {
-                            self.bar_focused = true;
-                        } else {
-                            if self.tabs.take_focus(Direction::front()) {
-                                self.bar_focused = false;
-                            }
-                        }
+                }
+                Placement::HorizontalTop | Placement::VerticalLeft => {
+                    // We need to compare each individual value since the comparions with `>=` on the XY struct dPartialOrdoes not work as expected. When one value is the same but the other not it does not match although it should.
+                    if position.x >= offset.x
+                        && position.y >= offset.y
+                        && (self.bar_size - Vec2::new(1, 1)).fits(position - offset)
+                    {
+                        self.bar_focused = true;
+                    } else if self.tabs.take_focus(Direction::front()) {
+                        self.bar_focused = false;
                     }
                 }
             }
-            _ => {}
         }
 
         if self.bar_focused {
-            match self
-                .bar
-                .on_event(evt.clone().relativized(match self.bar_placement {
-                    Placement::HorizontalTop | Placement::VerticalLeft => Vec2::new(0, 0),
-                    Placement::HorizontalBottom => self.tab_size.keep_y() + Vec2::new(0, 1),
-                    Placement::VerticalRight => self.tab_size.keep_x() + Vec2::new(1, 0),
-                })) {
-                EventResult::Consumed(cb) => EventResult::Consumed(cb),
-                EventResult::Ignored => match evt {
-                    Event::Key(Key::Down) if self.bar_placement == Placement::HorizontalTop => {
-                        match self.tabs.take_focus(Direction::up()) {
-                            true => {
-                                self.bar_focused = false;
-                                EventResult::Consumed(None)
-                            }
-                            false => EventResult::Ignored,
-                        }
-                    }
-                    Event::Key(Key::Up) if self.bar_placement == Placement::HorizontalBottom => {
-                        match self.tabs.take_focus(Direction::down()) {
-                            true => {
-                                self.bar_focused = false;
-                                EventResult::Consumed(None)
-                            }
-                            false => EventResult::Ignored,
-                        }
-                    }
-                    Event::Key(Key::Left) if self.bar_placement == Placement::VerticalRight => {
-                        match self.tabs.take_focus(Direction::right()) {
-                            true => {
-                                self.bar_focused = false;
-                                EventResult::Consumed(None)
-                            }
-                            false => EventResult::Ignored,
-                        }
-                    }
-                    Event::Key(Key::Right) if self.bar_placement == Placement::VerticalLeft => {
-                        match self.tabs.take_focus(Direction::left()) {
-                            true => {
-                                self.bar_focused = false;
-                                EventResult::Consumed(None)
-                            }
-                            false => EventResult::Ignored,
-                        }
-                    }
-                    _ => EventResult::Ignored,
-                },
-            }
+            self.on_event_focused(evt)
         } else {
-            match self
-                .tabs
-                .on_event(evt.relativized(match self.bar_placement {
-                    Placement::HorizontalTop => Vec2::new(1, self.bar_size.y),
-                    Placement::VerticalLeft => Vec2::new(self.bar_size.x, 1),
-                    Placement::HorizontalBottom | Placement::VerticalRight => Vec2::new(1, 1),
-                })) {
-                EventResult::Consumed(cb) => EventResult::Consumed(cb),
-                EventResult::Ignored => match evt {
-                    Event::Key(Key::Up) if self.bar_placement == Placement::HorizontalTop => {
-                        self.bar_focused = true;
-                        EventResult::Consumed(None)
-                    }
-                    Event::Key(Key::Down) if self.bar_placement == Placement::HorizontalBottom => {
-                        self.bar_focused = true;
-                        EventResult::Consumed(None)
-                    }
-                    Event::Key(Key::Left) if self.bar_placement == Placement::VerticalLeft => {
-                        self.bar_focused = true;
-                        EventResult::Consumed(None)
-                    }
-                    Event::Key(Key::Right) if self.bar_placement == Placement::VerticalRight => {
-                        self.bar_focused = true;
-                        EventResult::Consumed(None)
-                    }
-                    _ => EventResult::Ignored,
-                },
-            }
+            self.on_event_unfocused(evt)
         }
     }
 

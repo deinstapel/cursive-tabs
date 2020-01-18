@@ -10,16 +10,14 @@
 //! ```
 //! # use cursive::{Cursive, views::{TextView, Dialog}};
 //! # use cursive_tabs::TabView;
-//! # fn main() {
-//! #   let mut siv = Cursive::default();
+//! # let mut siv = Cursive::default();
 //! let mut tabs = TabView::new();
-//! #   // That is all what is needed to display an empty TabView, but of course
-//! #   // you can add your own tabs now and switch them around as you want!
-//! #   tabs.add_tab("First", TextView::new("Our first view!"));
-//! #   siv.add_layer(Dialog::around(tabs));
-//! #   // When your done setting run cursive
-//! #   // siv.run();
-//! # }
+//! # // That is all what is needed to display an empty TabView, but of course
+//! # // you can add your own tabs now and switch them around as you want!
+//! # tabs.add_tab("First", TextView::new("Our first view!"));
+//! # siv.add_layer(Dialog::around(tabs));
+//! # // When your done setting run cursive
+//! # // siv.run();
 //! ```
 //! You can then use the provided methods to modify the content of the `TabView`
 //! Consuming and non-consuming are both provided.
@@ -28,16 +26,15 @@
 //! ```
 //! use cursive::{Cursive, views::{TextView, Dialog}};
 //! use cursive_tabs::TabView;
-//! fn main() {
-//!   let mut siv = Cursive::default();
-//!   let mut tabs = TabView::new();
-//!   // That is all what is needed to display an empty TabView, but of course
-//!   // you can add your own tabs now and switch them around as you want!
-//!   tabs.add_tab("First", TextView::new("Our first view!"));
-//!   siv.add_layer(Dialog::around(tabs));
-//!   // When your done setting run cursive
-//!   // siv.run();
-//! }
+//!
+//! let mut siv = Cursive::default();
+//! let mut tabs = TabView::new();
+//! // That is all what is needed to display an empty TabView, but of course
+//! // you can add your own tabs now and switch them around as you want!
+//! tabs.add_tab("First", TextView::new("Our first view!"));
+//! siv.add_layer(Dialog::around(tabs));
+//! // When your done setting run cursive
+//! // siv.run();
 //! ```
 use crossbeam::{Receiver, Sender};
 use cursive::direction::Direction;
@@ -65,13 +62,18 @@ pub struct TabView<K: Hash> {
     invalidated: bool,
 }
 
+impl<K: Hash + Eq + Copy + 'static> Default for TabView<K> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<K: Hash + Eq + Copy + 'static> TabView<K> {
     /// Returns a new TabView
     /// # Example
     /// ```
     /// # use cursive::{Cursive, views::{TextView, Dialog}};
     /// # use cursive_tabs::TabView;
-    /// # fn main() {
     /// #  let mut siv = Cursive::default();
     /// let mut tabs = TabView::new();
     /// #  // That is all what is needed to display an empty TabView, but of course
@@ -80,7 +82,6 @@ impl<K: Hash + Eq + Copy + 'static> TabView<K> {
     /// #  siv.add_layer(Dialog::around(tabs));
     /// #  // When your done setting run cursive
     /// #  // siv.run();
-    /// # }
     /// ```
     pub fn new() -> Self {
         Self {
@@ -184,8 +185,9 @@ impl<K: Hash + Eq + Copy + 'static> TabView<K> {
                 _ => {}
             }
         }
-        if fst_pos.is_some() && snd_pos.is_some() {
-            self.key_order.swap(fst_pos.unwrap(), snd_pos.unwrap());
+
+        if let (Some(fst_pos), Some(snd_pos)) = (fst_pos, snd_pos) {
+            self.key_order.swap(fst_pos, snd_pos);
         }
     }
 
@@ -193,7 +195,7 @@ impl<K: Hash + Eq + Copy + 'static> TabView<K> {
     /// If the removed tab is active at the moment, the `TabView` will unfocus it and
     /// the focus needs to be set manually afterwards, or a new view has to be inserted.
     pub fn remove_tab(&mut self, id: K) -> Result<(), ()> {
-        if let Some(_) = self.map.remove(&id) {
+        if self.map.remove(&id).is_some() {
             if let Some(key) = &self.current_id {
                 if *key == id {
                     // Current id no longer valid
@@ -223,7 +225,7 @@ impl<K: Hash + Eq + Copy + 'static> TabView<K> {
 
     // Returns the index of the key, length of the vector if the key is not included
     // This can be done with out sorting
-    fn index_key(cur_key: &K, key_order: &Vec<K>) -> usize {
+    fn index_key(cur_key: &K, key_order: &[K]) -> usize {
         for (idx, key) in key_order.iter().enumerate() {
             if *key == *cur_key {
                 return idx;

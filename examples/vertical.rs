@@ -3,20 +3,20 @@ use cursive::views::{Button, LinearLayout, PaddedView, TextArea, TextView};
 use cursive::Cursive;
 use cursive_tabs::{Align, Placement, TabPanel};
 
-const TAB_0: &'static str =
+const TAB_0: &str =
     "With using the TabPanel you get a TabView and TabBar, preconfigured for you to use!
 Simply create it with:
 
 `cursive_tabs::TabPanel::new()`";
 
-const TAB_1: &'static str = "You then can add views and configure your panel.";
+const TAB_1: &str = "You then can add views and configure your panel.";
 
-const TAB_2: &'static str =
+const TAB_2: &str =
     "Ofcourse you can also use the provided TabView without the panel, simply create it with:
 
 `cursive_tabs::TabView::new()`";
 
-const TAB_3: &'static str = "All you have to do is add:
+const TAB_3: &str = "All you have to do is add:
 
 cursive-tabs = \"^0\"
 
