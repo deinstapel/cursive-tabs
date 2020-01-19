@@ -149,7 +149,7 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
                                 .keep_x(),
                         )
                         // Spacing for first character
-                        .offset((idx * 1, 0))
+                        .offset((idx, 0))
                         .cropped({
                             if idx == 0 || idx == self.children.len() - 1 {
                                 self.sizes[idx].stack_horizontal(&Vec2::new(2, 1))
@@ -178,12 +178,10 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
                             } else {
                                 printer.print((0, 0), "│");
                             }
+                        } else if child.active {
+                            printer.print((0, 0), "┨")
                         } else {
-                            if child.active {
-                                printer.print((0, 0), "┨")
-                            } else {
-                                printer.print((0, 0), "┤");
-                            }
+                            printer.print((0, 0), "┤");
                         }
                         printer.with_effect(Effect::Bold, |printer| {
                             child.draw(&printer.offset((1, 0)))
@@ -225,7 +223,7 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
                                 .keep_y(),
                         )
                         // Spacing for first character
-                        .offset((0, idx * 1))
+                        .offset((0, idx))
                         .cropped({
                             if idx == 0 || idx == self.children.len() - 1 {
                                 self.sizes[idx].stack_vertical(&Vec2::new(1, 2))
@@ -253,28 +251,22 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
                             } else {
                                 printer.print_hline((0, 0), printer.size.x, "─");
                             }
+                        } else if child.active {
+                            printer.print_hline((0, 0), printer.size.x, "━");
+                            printer.print((horizontal_offset, 0), "┷")
                         } else {
-                            if child.active {
-                                printer.print_hline((0, 0), printer.size.x, "━");
-                                printer.print((horizontal_offset, 0), "┷")
-                            } else {
-                                printer.print_hline((0, 0), printer.size.x, "─");
-                                printer.print((horizontal_offset, 0), "┴");
-                            }
+                            printer.print_hline((0, 0), printer.size.x, "─");
+                            printer.print((horizontal_offset, 0), "┴");
                         }
                         printer.with_effect(Effect::Bold, |printer| {
                             child.draw(&printer.offset((0, 1)))
                         });
                         if idx == self.children.len() - 1 {
-                            let delim: &str;
-                            let connector: &str;
-                            if child.active {
-                                delim = "━";
-                                connector = "┯";
+                            let (delim, connector) = if child.active {
+                                ("━", "┯")
                             } else {
-                                delim = "─";
-                                connector = "┬";
-                            }
+                                ("─", "┬")
+                            };
                             printer.print_hline((0, printer.size.y - 1), printer.size.x, delim);
                             printer.print(
                                 self.sizes[idx].keep_y() + Vec2::new(horizontal_offset, 1),
@@ -360,66 +352,58 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
     }
 
     fn on_event(&mut self, evt: Event) -> EventResult {
-        match evt.clone() {
-            Event::Mouse {
-                offset,
-                position,
-                event,
-            } => {
-                let mut iter = self.children.iter().peekable().enumerate();
-                while let Some((idx, child)) = iter.next() {
-                    if position.checked_sub(offset).is_some() {
-                        if (match self.placement {
-                            Placement::HorizontalBottom | Placement::HorizontalTop => {
-                                child.pos
-                                    + Vec2::new(idx + 1, 0)
-                                    + Vec2::new(
-                                        self.align.get_offset(
-                                            // Length of buttons and delimiting characters
-                                            self.bar_size.x + self.children.len() + 1,
-                                            self.last_rendered_size.x,
-                                        ),
-                                        0,
-                                    )
-                            }
-                            Placement::VerticalLeft | Placement::VerticalRight => {
-                                child.pos
-                                    + Vec2::new(0, idx + 1)
-                                    + Vec2::new(
-                                        0,
-                                        self.align.get_offset(
-                                            // Length of buttons and delimiting characters
-                                            self.bar_size.y + self.children.len() + 1,
-                                            self.last_rendered_size.y,
-                                        ),
-                                    )
-                            }
-                        })
-                        .fits(position - offset)
-                        {
-                            match event {
-                                MouseEvent::Release(MouseButton::Left) => {
-                                    self.invalidated = true;
-                                    self.idx = Some(idx);
-                                    return self.children[idx].on_event(Event::Key(Key::Enter));
-                                }
-                                _ => {}
-                            }
+        if let Event::Mouse {
+            offset,
+            position,
+            event,
+        } = evt
+        {
+            for (idx, child) in self.children.iter().peekable().enumerate() {
+                if position.checked_sub(offset).is_some()
+                    && (match self.placement {
+                        Placement::HorizontalBottom | Placement::HorizontalTop => {
+                            child.pos
+                                + Vec2::new(idx + 1, 0)
+                                + Vec2::new(
+                                    self.align.get_offset(
+                                        // Length of buttons and delimiting characters
+                                        self.bar_size.x + self.children.len() + 1,
+                                        self.last_rendered_size.x,
+                                    ),
+                                    0,
+                                )
                         }
+                        Placement::VerticalLeft | Placement::VerticalRight => {
+                            child.pos
+                                + Vec2::new(0, idx + 1)
+                                + Vec2::new(
+                                    0,
+                                    self.align.get_offset(
+                                        // Length of buttons and delimiting characters
+                                        self.bar_size.y + self.children.len() + 1,
+                                        self.last_rendered_size.y,
+                                    ),
+                                )
+                        }
+                    })
+                    .fits(position - offset)
+                {
+                    if let MouseEvent::Release(MouseButton::Left) = event {
+                        self.invalidated = true;
+                        self.idx = Some(idx);
+                        return self.children[idx].on_event(Event::Key(Key::Enter));
                     }
                 }
             }
-            _ => {}
         }
 
         if let Some(focus) = self.idx {
             let pos = self.children[focus].pos;
-            match self.children[focus].on_event(evt.relativized(pos)) {
-                EventResult::Consumed(any) => {
-                    self.invalidated = true;
-                    return EventResult::Consumed(any);
-                }
-                _ => {}
+
+            if let EventResult::Consumed(any) = self.children[focus].on_event(evt.relativized(pos))
+            {
+                self.invalidated = true;
+                return EventResult::Consumed(any);
             }
         }
 
