@@ -1,4 +1,4 @@
-use cursive::view::{Boxable, Identifiable};
+use cursive::view::{Boxable, Identifiable, Margins};
 use cursive::views::{Button, LinearLayout, PaddedView, TextArea, TextView};
 use cursive::Cursive;
 use cursive_tabs::{Align, TabPanel};
