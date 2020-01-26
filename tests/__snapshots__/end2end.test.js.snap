@@ -84,6 +84,8 @@ exports[`tests initialization and rendering of right placed bar 1`] = `
 "
 `;
 
+exports[`tests initialization and rendering of right placed bar 2`] = `""`;
+
 exports[`tests inserting tabs at defined position 1`] = `
 "                                                                                
                                                                                 
