@@ -5,6 +5,7 @@ use cursive::event::{Event, Key};
 use cursive::views::TextView;
 use cursive::Vec2;
 use cursive_tabs::{Align, Placement, TabPanel, TabView};
+use insta::assert_display_snapshot;
 
 fn setup_test_environment<F>(cb: F) -> (Receiver<ObservedScreen>, Sender<Option<Event>>)
 where
@@ -72,13 +73,12 @@ impl TestCursive {
 
 #[test]
 fn test_puppet_screen() {
-    let (frames, input) = setup_test_environment(|siv: &mut cursive::Cursive| {
+    let (frames, _) = setup_test_environment(|siv: &mut cursive::Cursive| {
         siv.add_fullscreen_layer(TextView::new(
             "This is a smoke test for the puppet cursive backend.",
         ))
     });
-    frames.try_iter().last().unwrap().print_stdout();
-    // TODO snapshot test
+    assert_display_snapshot!(frames.try_iter().last().unwrap())
 }
 
 #[test]
@@ -90,7 +90,7 @@ fn end2end_add_at() {
             .with_tab_at(2, TextView::new("Second"), 1);
         siv.add_layer(tabs);
     });
-    frames.try_iter().last().unwrap().print_stdout();
+    assert_display_snapshot!(frames.try_iter().last().unwrap());
 }
 
 #[test]
@@ -103,12 +103,12 @@ fn end2end_add_at_action_change_tab() {
         siv.add_layer(tabs);
     });
     tsiv.input(Event::Key(Key::Up));
-    tsiv.last_screen().print_stdout();
+    assert_display_snapshot!(tsiv.last_screen());
 }
 
 #[test]
 fn end2end_add_at_panel() {
-    let (frames, input) = setup_test_environment(|siv: &mut cursive::Cursive| {
+    let (frames, _) = setup_test_environment(|siv: &mut cursive::Cursive| {
         let tabs = TabPanel::new()
             .with_tab("Stonks", TextView::new("Pshhhh"))
             .with_tab_at("So", TextView::new("Fooooo"), 0)
@@ -116,12 +116,12 @@ fn end2end_add_at_panel() {
             .with_bar_alignment(Align::Center);
         siv.add_layer(tabs);
     });
-    frames.try_iter().last().unwrap().print_stdout();
+    assert_display_snapshot!(frames.try_iter().last().unwrap());
 }
 
 #[test]
 fn end2end_panel_smoke() {
-    let (frames, input) = setup_test_environment(|siv: &mut cursive::Cursive| {
+    let (frames, _) = setup_test_environment(|siv: &mut cursive::Cursive| {
         let tabs = TabPanel::new()
             .with_tab("Stronk test", TextView::new("Pshhhh"))
             .with_active_tab("Stronk test")
@@ -129,36 +129,36 @@ fn end2end_panel_smoke() {
             .with_bar_alignment(Align::Center);
         siv.add_layer(tabs);
     });
-    frames.try_iter().last().unwrap().print_stdout();
+    assert_display_snapshot!(frames.try_iter().last().unwrap());
 }
 
 #[test]
 fn end2end_remove_active() {
-    let (frames, input) = setup_test_environment(|siv: &mut cursive::Cursive| {
+    let (frames, _) = setup_test_environment(|siv: &mut cursive::Cursive| {
         let mut tabs = TabView::new()
             .with_tab(0, TextView::new("First"))
             .with_tab(1, TextView::new("Second"));
         tabs.remove_tab(1).expect("Removal of active tab failed");
         siv.add_layer(tabs);
     });
-    frames.try_iter().last().unwrap().print_stdout();
+    assert_display_snapshot!(frames.try_iter().last().unwrap());
 }
 
 #[test]
 fn end2end_remove_inactive() {
-    let (frames, input) = setup_test_environment(|siv: &mut cursive::Cursive| {
+    let (frames, _) = setup_test_environment(|siv: &mut cursive::Cursive| {
         let mut tabs = TabView::new()
             .with_tab(0, TextView::new("First"))
             .with_tab(1, TextView::new("Second"));
         tabs.remove_tab(0).expect("Removal failed.");
         siv.add_layer(tabs);
     });
-    frames.try_iter().last().unwrap().print_stdout();
+    assert_display_snapshot!(frames.try_iter().last().unwrap());
 }
 
 #[test]
 fn end2end_swap() {
-    let (frames, input) = setup_test_environment(|siv: &mut cursive::Cursive| {
+    let (frames, _) = setup_test_environment(|siv: &mut cursive::Cursive| {
         let mut tabs = TabPanel::new()
             .with_tab("Stonks", TextView::new("Pshhhh"))
             .with_tab_at("So", TextView::new("Fooooo"), 0)
@@ -167,12 +167,12 @@ fn end2end_swap() {
         tabs.swap_tabs("So", "Stonks");
         siv.add_layer(tabs);
     });
-    frames.try_iter().last().unwrap().print_stdout();
+    assert_display_snapshot!(frames.try_iter().last().unwrap());
 }
 
 #[test]
 fn end2end_switch() {
-    let (frames, input) = setup_test_environment(|siv: &mut cursive::Cursive| {
+    let (frames, _) = setup_test_environment(|siv: &mut cursive::Cursive| {
         let tabs = TabView::new()
             .with_tab(0, TextView::new("First"))
             .with_tab(1, TextView::new("Second"))
@@ -180,12 +180,12 @@ fn end2end_switch() {
             .expect("Setting tab has failed");
         siv.add_layer(tabs);
     });
-    frames.try_iter().last().unwrap().print_stdout();
+    assert_display_snapshot!(frames.try_iter().last().unwrap());
 }
 
 #[test]
 fn end2end_vertical_left() {
-    let (frames, input) = setup_test_environment(|siv: &mut cursive::Cursive| {
+    let (frames, _) = setup_test_environment(|siv: &mut cursive::Cursive| {
         let tabs = TabPanel::new()
             .with_tab("Stronk test", TextView::new("Pshhhh"))
             .with_tab("Stronker test", TextView::new("Pshhhh"))
@@ -195,7 +195,7 @@ fn end2end_vertical_left() {
             .with_bar_placement(Placement::VerticalLeft);
         siv.add_layer(tabs);
     });
-    frames.try_iter().last().unwrap().print_stdout();
+    assert_display_snapshot!(frames.try_iter().last().unwrap());
 }
 
 #[test]
@@ -211,12 +211,12 @@ fn end2end_vertical_left_with_action_change_tab() {
         siv.add_layer(tabs);
     });
     tsiv.input(Event::Key(Key::Up));
-    tsiv.last_screen().print_stdout();
+    assert_display_snapshot!(tsiv.last_screen());
 }
 
 #[test]
 fn end2end_vertical_right() {
-    let (frames, input) = setup_test_environment(|siv: &mut cursive::Cursive| {
+    let (frames, _) = setup_test_environment(|siv: &mut cursive::Cursive| {
         let tabs = TabPanel::new()
             .with_tab("Stronk test", TextView::new("Pshhhh"))
             .with_active_tab("Stronk test")
@@ -225,5 +225,5 @@ fn end2end_vertical_right() {
             .with_bar_placement(Placement::VerticalRight);
         siv.add_layer(tabs);
     });
-    frames.try_iter().last().unwrap().print_stdout();
+    assert_display_snapshot!(frames.try_iter().last().unwrap());
 }
