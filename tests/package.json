@@ -1,6 +1,0 @@
-{
-  "name": "cursive-tabs-tests",
-  "dependencies": {
-    "shellshot": "^0.2.2"
-  }
-}
