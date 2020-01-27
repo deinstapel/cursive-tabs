@@ -45,7 +45,7 @@ impl TestCursive {
         siv.step();
         Self { siv, frames, input }
     }
-    fn call_on<F>(&mut self, cb: F)
+    _fn call_on<F>(&mut self, cb: F)
     where
         F: FnOnce(&mut cursive::Cursive),
     {
