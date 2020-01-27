@@ -45,7 +45,7 @@ impl TestCursive {
         siv.step();
         Self { siv, frames, input }
     }
-    _fn call_on<F>(&mut self, cb: F)
+    fn _call_on<F>(&mut self, cb: F)
     where
         F: FnOnce(&mut cursive::Cursive),
     {
@@ -83,7 +83,7 @@ fn test_puppet_screen() {
 
 #[test]
 fn end2end_add_at() {
-    let (frames, input) = setup_test_environment(|siv: &mut cursive::Cursive| {
+    let (frames, _) = setup_test_environment(|siv: &mut cursive::Cursive| {
         let tabs = TabView::new()
             .with_tab_at(0, TextView::new("Third"), 0)
             .with_tab_at(1, TextView::new("First"), 0)
