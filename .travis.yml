@@ -9,7 +9,6 @@ install:
   - source $HOME/.cargo/env
   - rustup toolchain install nightly
   - nvm install 10
-  - ./scripts/prepare-end2end-tests.sh
 env:
   - RUST_CHAIN=stable
   - RUST_CHAIN=nightly
