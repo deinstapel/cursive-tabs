@@ -165,7 +165,7 @@ their API to a `RFC 344` consistent naming scheme, this crate will adapt to the 
 **Fin Christensen**
 
 > [:octocat: `@fin-ger`](https://github.com/fin-ger)  
-> [:elephant: `@fin_ger@mastodon.social`](https://mastodon.social/web/accounts/787945)  
+> [:elephant: `@fin_ger@weirder.earth`](https://weirder.earth/@fin_ger)  
 > [:bird: `@fin_ger_github`](https://twitter.com/fin_ger_github)  
 
 <br>
