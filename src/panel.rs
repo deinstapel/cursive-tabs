@@ -153,6 +153,7 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabPanel<K> {
     /// Note: Calls `add_tab_at` on the enclosed `TabView`.
     pub fn with_tab_at<T: View>(mut self, id: K, view: T, pos: usize) -> Self {
         self.tabs.add_tab_at(id, view, pos);
+        self.bar.add_button_at(self.tx.clone(), id, pos);
         self
     }
 
