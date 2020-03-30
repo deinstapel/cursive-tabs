@@ -1,4 +1,4 @@
-use crossbeam::{unbounded, Receiver, Sender};
+use crossbeam::{unbounded, Sender};
 use cursive::direction::{Absolute, Direction};
 use cursive::event::{AnyCb, Event, EventResult, Key};
 use cursive::view::{Selector, View};
@@ -57,13 +57,11 @@ impl Align {
 ///
 /// A TabView is also usable separately, so if you prefer the tabs without the TabBar and Panel around have a look at `TabView`.
 pub struct TabPanel<K: Hash + Eq + Display + Copy + 'static> {
-    order: Vec<K>,
     bar: TabBar<K>,
     bar_size: Vec2,
     tab_size: Vec2,
     tx: Sender<K>,
     tabs: TabView<K>,
-    active_rx: Receiver<K>,
     bar_focused: bool,
     bar_align: Align,
     bar_placement: Placement,
@@ -85,13 +83,13 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabPanel<K> {
         tabs.set_bar_rx(rx);
         tabs.set_active_key_tx(active_tx);
         Self {
-            order: Vec::new(),
-            bar: TabBar::new(active_rx.clone()),
+            bar: TabBar::new(active_rx.clone())
+                .with_placement(Placement::HorizontalTop)
+                .with_alignment(Align::Start),
             bar_size: Vec2::new(1, 1),
             tab_size: Vec2::new(1, 1),
             tabs,
             tx,
-            active_rx,
             bar_focused: true,
             bar_align: Align::Start,
             bar_placement: Placement::HorizontalTop,
@@ -124,13 +122,14 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabPanel<K> {
     /// Note: Calls `add_tab` on the enclosed `TabView`.
     pub fn add_tab<T: View>(&mut self, id: K, view: T) {
         self.tabs.add_tab(id, view);
+        self.bar.add_button(self.tx.clone(), id);
     }
 
     /// Consuming & Chainable variant to add a new tab.
     /// Note: Calls `add_tab` on the enclosed `TabView`.
     pub fn with_tab<T: View>(mut self, id: K, view: T) -> Self {
         self.tabs.add_tab(id, view);
-
+        self.bar.add_button(self.tx.clone(), id);
         self
     }
 
@@ -138,6 +137,7 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabPanel<K> {
     /// If at least one of them cannot be found then no operation is performed
     pub fn swap_tabs(&mut self, fst: K, snd: K) {
         self.tabs.swap_tabs(fst, snd);
+        self.bar.swap_button(fst, snd);
     }
 
     /// Non-consuming variant to add new tabs to the `TabView` at a certain position.
@@ -145,6 +145,7 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabPanel<K> {
     /// Note: Calls `add_tab_at` on the enclosed `TabView`.
     pub fn add_tab_at<T: View>(&mut self, id: K, view: T, pos: usize) {
         self.tabs.add_tab_at(id, view, pos);
+        self.bar.add_button_at(self.tx.clone(), id, pos);
     }
 
     /// Consuming & Chainable variant to add a new tab at a certain position.
@@ -152,12 +153,12 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabPanel<K> {
     /// Note: Calls `add_tab_at` on the enclosed `TabView`.
     pub fn with_tab_at<T: View>(mut self, id: K, view: T, pos: usize) -> Self {
         self.tabs.add_tab_at(id, view, pos);
-
         self
     }
 
     /// Remove a tab of the enclosed `TabView`.
     pub fn remove_tab(&mut self, id: K) -> Result<(), ()> {
+        self.bar.remove_button(id);
         self.tabs.remove_tab(id)
     }
 
@@ -181,6 +182,7 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabPanel<K> {
     /// Non-consuming variant to set the bar alignment.
     pub fn set_bar_alignment(&mut self, align: Align) {
         self.bar_align = align;
+        self.bar.set_alignment(align);
     }
 
     pub fn with_bar_placement(mut self, placement: Placement) -> Self {
@@ -190,6 +192,7 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabPanel<K> {
 
     pub fn set_bar_placement(&mut self, placement: Placement) {
         self.bar_placement = placement;
+        self.bar.set_placement(placement);
     }
 
     /// Returns the current order of tabs as an Vector with the keys of the views.
@@ -409,16 +412,6 @@ impl<K: Hash + Eq + Copy + std::fmt::Display + 'static> View for TabPanel<K> {
     }
 
     fn required_size(&mut self, cst: Vec2) -> Vec2 {
-        if self.order != self.tab_order() {
-            debug!("Rebuilding TabBar");
-            self.bar = TabBar::new(self.active_rx.clone())
-                .with_alignment(self.bar_align)
-                .with_placement(self.bar_placement);
-            for key in self.tab_order() {
-                self.bar.add_button(self.tx.clone(), key);
-            }
-            self.order = self.tab_order();
-        }
         let tab_size = self.tabs.required_size(cst);
         self.bar_size = self.bar.required_size(cst);
         match self.bar_placement {

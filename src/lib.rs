@@ -126,7 +126,6 @@ impl<K: Hash + Eq + Copy + 'static> TabView<K> {
     /// This is the consumable variant.
     pub fn with_active_tab(mut self, id: K) -> Result<Self, ()> {
         self.set_active_tab(id)?;
-
         Ok(self)
     }
 
@@ -144,7 +143,6 @@ impl<K: Hash + Eq + Copy + 'static> TabView<K> {
     /// This is the consumable variant.
     pub fn with_tab<T: View>(mut self, id: K, view: T) -> Self {
         self.add_tab(id, view);
-
         self
     }
 

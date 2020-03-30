@@ -12,6 +12,9 @@ use crate::panel::{Align, Placement};
 
 pub trait Bar<K: Hash + Eq + Copy + Display + 'static> {
     fn add_button(&mut self, tx: Sender<K>, key: K);
+    fn remove_button(&mut self, key: K);
+    fn swap_button(&mut self, left: K, right: K);
+    fn add_button_at(&mut self, tx: Sender<K>, key: K, pos: usize);
 }
 
 // Quick Wrapper around Views to be able to set their positon
@@ -71,10 +74,20 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabBar<K> {
         self
     }
 
+    pub fn set_alignment(&mut self, align: Align) {
+        self.align = align;
+        self.invalidated = true;
+    }
+
     pub fn with_placement(mut self, placement: Placement) -> Self {
         self.placement = placement;
         self.invalidated = true;
         self
+    }
+
+    pub fn set_placement(&mut self, placement: Placement) {
+        self.placement = placement;
+        self.invalidated = true;
     }
 
     fn decrement_idx(&mut self) -> EventResult {
@@ -119,6 +132,66 @@ impl<K: Hash + Eq + Copy + Display + 'static> Bar<K> for TabBar<K> {
         });
         self.children.push(PositionWrap::new(button, key));
         self.idx = Some(self.children.len() - 1);
+        self.invalidated = true;
+    }
+
+    fn remove_button(&mut self, key: K) {
+        if let Some(pos) = self
+            .children
+            .iter()
+            .enumerate()
+            .filter_map(
+                |(pos, button)| {
+                    if button.key == key {
+                        Some(pos)
+                    } else {
+                        None
+                    }
+                },
+            )
+            .next()
+        {
+            self.children.remove(pos);
+        }
+        self.invalidated = true;
+    }
+
+    fn swap_button(&mut self, first: K, second: K) {
+        let pos: Vec<usize> = self
+            .children
+            .iter()
+            .enumerate()
+            .filter_map(|(pos, button)| {
+                if button.key == first || button.key == second {
+                    Some(pos)
+                } else {
+                    None
+                }
+            })
+            .collect();
+        match pos[..] {
+            [pos1, pos2] => {
+                let child2 = self.children.remove(pos2);
+                let child1 = self.children.remove(pos1);
+                self.children.insert(pos1, child2);
+                self.children.insert(pos2, child1);
+            }
+            _ => {}
+        }
+        self.invalidated = true;
+    }
+
+    fn add_button_at(&mut self, tx: Sender<K>, key: K, pos: usize) {
+        let button = Button::new_raw(format!(" {} ", key), move |_| {
+            debug!("send {}", key);
+            match tx.send(key) {
+                Ok(_) => {}
+                Err(err) => {
+                    debug!("button could not send key: {:?}", err);
+                }
+            }
+        });
+        self.children.insert(pos, PositionWrap::new(button, key));
         self.invalidated = true;
     }
 }
@@ -305,6 +378,9 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
         self.sizes.clear();
         let sizes = &mut self.sizes;
         let placement = self.placement;
+        if self.children.is_empty() {
+            return Vec2::new(1, 1);
+        }
         let total_size = self
             .children
             .iter_mut()
