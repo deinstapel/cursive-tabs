@@ -28,11 +28,11 @@ pub enum Placement {
 }
 
 impl Align {
-    pub fn get_offset(&self, content: usize, container: usize) -> usize {
+    pub fn get_offset(self, content: usize, container: usize) -> usize {
         if container < content {
             0
         } else {
-            match *self {
+            match self {
                 Align::Start => 0,
                 Align::Center => (container - content) / 2,
                 Align::End => container - content,
@@ -83,7 +83,7 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabPanel<K> {
         tabs.set_bar_rx(rx);
         tabs.set_active_key_tx(active_tx);
         Self {
-            bar: TabBar::new(active_rx.clone())
+            bar: TabBar::new(active_rx)
                 .with_placement(Placement::HorizontalTop)
                 .with_alignment(Align::Start),
             bar_size: Vec2::new(1, 1),

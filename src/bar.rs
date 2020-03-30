@@ -169,14 +169,11 @@ impl<K: Hash + Eq + Copy + Display + 'static> Bar<K> for TabBar<K> {
                 }
             })
             .collect();
-        match pos[..] {
-            [pos1, pos2] => {
-                let child2 = self.children.remove(pos2);
-                let child1 = self.children.remove(pos1);
-                self.children.insert(pos1, child2);
-                self.children.insert(pos2, child1);
-            }
-            _ => {}
+        if let [pos1, pos2] = pos[..] {
+            let child2 = self.children.remove(pos2);
+            let child1 = self.children.remove(pos1);
+            self.children.insert(pos1, child2);
+            self.children.insert(pos2, child1);
         }
         self.invalidated = true;
     }
