@@ -10,6 +10,7 @@ use std::hash::Hash;
 
 use crate::panel::{Align, Placement};
 
+/// Trait which defines which basic action a tab bar should be able to handle
 pub trait Bar<K: Hash + Eq + Copy + Display + 'static> {
     fn add_button(&mut self, tx: Sender<K>, key: K);
     fn remove_button(&mut self, key: K);
@@ -21,7 +22,6 @@ pub trait Bar<K: Hash + Eq + Copy + Display + 'static> {
 struct PositionWrap<T: View, K> {
     view: T,
     pub pos: Vec2,
-    pub active: bool,
     pub key: K,
 }
 
@@ -34,7 +34,6 @@ impl<T: View, K> PositionWrap<T, K> {
         Self {
             view,
             pos: Vec2::zero(),
-            active: false,
             key,
         }
     }
@@ -48,7 +47,8 @@ pub struct TabBar<K: Hash + Eq + Copy + Display + 'static> {
     // List of accumulated sizes of prev buttons
     sizes: Vec<Vec2>,
     placement: Placement,
-    idx: Option<usize>,
+    cursor: Option<usize>,
+    active: Option<usize>,
     rx: Receiver<K>,
     invalidated: bool,
 }
@@ -58,7 +58,8 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabBar<K> {
         Self {
             children: Vec::new(),
             sizes: Vec::new(),
-            idx: None,
+            cursor: None,
+            active: None,
             align: Align::Start,
             placement: Placement::HorizontalTop,
             bar_size: Vec2::zero(),
@@ -91,9 +92,9 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabBar<K> {
     }
 
     fn decrement_idx(&mut self) -> EventResult {
-        if let Some(index) = self.idx {
+        if let Some(index) = self.cursor {
             if index > 0 {
-                self.idx = Some(index - 1);
+                self.cursor = Some(index - 1);
                 self.invalidated = true;
                 EventResult::Consumed(None)
             } else {
@@ -105,9 +106,9 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabBar<K> {
     }
 
     fn increment_idx(&mut self) -> EventResult {
-        if let Some(index) = self.idx {
+        if let Some(index) = self.cursor {
             if (index + 1) < self.children.len() {
-                self.idx = Some(index + 1);
+                self.cursor = Some(index + 1);
                 self.invalidated = true;
                 EventResult::Consumed(None)
             } else {
@@ -131,7 +132,8 @@ impl<K: Hash + Eq + Copy + Display + 'static> Bar<K> for TabBar<K> {
             }
         });
         self.children.push(PositionWrap::new(button, key));
-        self.idx = Some(self.children.len() - 1);
+        self.cursor = Some(self.children.len() - 1);
+        self.active = Some(self.children.len() - 1);
         self.invalidated = true;
     }
 
@@ -151,6 +153,12 @@ impl<K: Hash + Eq + Copy + Display + 'static> Bar<K> for TabBar<K> {
             )
             .next()
         {
+            if let Some(idx) = self.cursor {
+                if idx == pos {
+                    self.cursor = None;
+                    self.active = None;
+                }
+            }
             self.children.remove(pos);
         }
         self.invalidated = true;
@@ -188,6 +196,8 @@ impl<K: Hash + Eq + Copy + Display + 'static> Bar<K> for TabBar<K> {
                 }
             }
         });
+        self.cursor = Some(pos);
+        self.active = Some(pos);
         self.children.insert(pos, PositionWrap::new(button, key));
         self.invalidated = true;
     }
@@ -229,7 +239,7 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
                         });
                     let mut theme = printer.theme.clone();
 
-                    if !child.active {
+                    if !self.active.map_or(false, |active| idx == active) {
                         let color = theme.palette[PaletteColor::TitleSecondary];
                         theme.palette[PaletteColor::Primary] = color;
                     } else {
@@ -237,18 +247,20 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
                         theme.palette[PaletteColor::Primary] = color;
                     }
 
-                    if let Some(focus) = self.idx {
+                    if let Some(focus) = self.cursor {
                         print = print.focused(focus == idx);
                     }
 
                     print.with_theme(&theme, |printer| {
                         if idx > 0 {
-                            if child.active || self.children[idx - 1].active {
+                            if self.active.map_or(false, |active| idx == active)
+                                || self.active.map_or(false, |active| active == (idx - 1))
+                            {
                                 printer.print((0, 0), "┃")
                             } else {
                                 printer.print((0, 0), "│");
                             }
-                        } else if child.active {
+                        } else if self.active.map_or(false, |active| idx == active) {
                             printer.print((0, 0), "┨")
                         } else {
                             printer.print((0, 0), "┤");
@@ -257,7 +269,7 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
                             child.draw(&printer.offset((1, 0)))
                         });
                         if idx == self.children.len() - 1 {
-                            if child.active {
+                            if self.active.map_or(false, |active| idx == active) {
                                 printer.offset((1, 0)).print(self.sizes[idx].keep_x(), "┠");
                             } else {
                                 printer.offset((1, 0)).print(self.sizes[idx].keep_x(), "├");
@@ -303,7 +315,7 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
                         });
                     let mut theme = printer.theme.clone();
 
-                    if !child.active {
+                    if !self.active.map_or(false, |active| idx == active) {
                         let color = theme.palette[PaletteColor::TitleSecondary];
                         theme.palette[PaletteColor::Primary] = color;
                     } else {
@@ -311,17 +323,19 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
                         theme.palette[PaletteColor::Primary] = color;
                     }
 
-                    if let Some(focus) = self.idx {
+                    if let Some(focus) = self.cursor {
                         print = print.focused(focus == idx);
                     }
                     print.with_theme(&theme, |printer| {
                         if idx > 0 {
-                            if child.active || self.children[idx - 1].active {
+                            if self.active.map_or(false, |active| idx == active)
+                                || self.active.map_or(false, |active| active == (idx - 1))
+                            {
                                 printer.print_hline((0, 0), printer.size.x, "━");
                             } else {
                                 printer.print_hline((0, 0), printer.size.x, "─");
                             }
-                        } else if child.active {
+                        } else if self.active.map_or(false, |active| idx == active) {
                             printer.print_hline((0, 0), printer.size.x, "━");
                             printer.print((horizontal_offset, 0), "┷")
                         } else {
@@ -332,11 +346,12 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
                             child.draw(&printer.offset((0, 1)))
                         });
                         if idx == self.children.len() - 1 {
-                            let (delim, connector) = if child.active {
-                                ("━", "┯")
-                            } else {
-                                ("─", "┬")
-                            };
+                            let (delim, connector) =
+                                if self.active.map_or(false, |active| idx == active) {
+                                    ("━", "┯")
+                                } else {
+                                    ("─", "┬")
+                                };
                             printer.print_hline((0, printer.size.y - 1), printer.size.x, delim);
                             printer.print(
                                 self.sizes[idx].keep_y() + Vec2::new(horizontal_offset, 1),
@@ -362,13 +377,17 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
     }
 
     fn required_size(&mut self, cst: Vec2) -> Vec2 {
+        while (self.rx.len() > 1) {
+            // Discard old messages
+            // This may happen if more than one view gets added to before the event loop of cursive gets started, resulting
+            // in an incorrect start state
+            self.rx.try_recv();
+        }
         if let Ok(new_active) = self.rx.try_recv() {
             self.invalidated = true;
-            for child in &mut self.children {
+            for (idx, child) in self.children.iter().enumerate() {
                 if new_active == child.key {
-                    child.active = true;
-                } else {
-                    child.active = false;
+                    self.active = Some(idx);
                 }
             }
         }
@@ -463,14 +482,14 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
                 {
                     if let MouseEvent::Release(MouseButton::Left) = event {
                         self.invalidated = true;
-                        self.idx = Some(idx);
+                        self.cursor = Some(idx);
                         return self.children[idx].on_event(Event::Key(Key::Enter));
                     }
                 }
             }
         }
 
-        if let Some(focus) = self.idx {
+        if let Some(focus) = self.cursor {
             let pos = self.children[focus].pos;
 
             if let EventResult::Consumed(any) = self.children[focus].on_event(evt.relativized(pos))

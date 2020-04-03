@@ -152,6 +152,15 @@ impl<K: Hash + Eq + Copy + 'static> TabView<K> {
     /// This is designed to not fail, if the given position is greater than the number of current tabs, it simply will be appended.
     pub fn add_tab_at<T: View>(&mut self, id: K, view: T, pos: usize) {
         self.map.insert(id, Box::new(view));
+        if let Some(sender) = &self.active_key_tx {
+            match sender.send(id) {
+                Ok(_) => {}
+                Err(send_err) => debug!(
+                    "Could not send new key to receiver in TabBar, has it been dropped? {}",
+                    send_err
+                ),
+            }
+        }
         self.current_id = Some(id);
         if self.key_order.len() > pos {
             self.key_order.insert(pos, id)
