@@ -1,7 +1,7 @@
 {
-  "color": "brightgreen",
+  "color": "yellow",
   "isError": true,
   "label": "cargo test",
-  "message": "9 / 9 tests",
+  "message": "8 / 9 tests",
   "schemaVersion": 1
 }
