@@ -11,9 +11,9 @@ exports[`smoke tests the tab panel 1`] = `
                                                                                 
                                                                                 
                                                                                 
- ┌──────────────────────────────┨ Stronk test ┠───────────────────────────────┐ 
- │Pshhhh                                                                      │ 
- └────────────────────────────────────────────────────────────────────────────┘ 
+                           ┌────┨ Stronk test ┠─────┐                           
+                           │Pshhhh                  │                           
+                           └────────────────────────┘                           
                                                                                 
                                                                                 
                                                                                 
@@ -30,56 +30,56 @@ exports[`smoke tests the tab panel 1`] = `
 
 exports[`tests initialization and rendering of left placed bar 1`] = `
 "                                                                                
-                                           ┌─────┐                              
-                                           │Pshhh│                              
-                                           │h    │                              
-                                           │     │                              
-                                           │     │                              
-                                           │     │                              
-                                           │     │                              
-                                           │     │                              
-                             ━━━━━━━━━━━━━ │     │                              
-                              Stronk test  │     │                              
-                             ━━━━━━━━━━━━━━━     │                              
-                              Stronker test      │                              
-                             ──────────────┬     │                              
-                                           │     │                              
-                                           │     │                              
-                                           │     │                              
-                                           │     │                              
-                                           │     │                              
-                                           │     │                              
-                                           │     │                              
-                                           │     │                              
-                                           └─────┘                              
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                      ┌─────┐                   
+                   ───────────────────────────────────┴Pshhh│                   
+                    A very long and strong description h    │                   
+                                   ────────────────────     │                   
+                                    A much shorter one      │                   
+                                          ─────────────     │                   
+                                           Ridiculous!      │                   
+                                                  ━━━━━     │                   
+                                                   Si!      │                   
+                                                  ━━━━━     │                   
+                                                      └─────┘                   
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
                                                                                 
 "
 `;
 
 exports[`tests initialization and rendering of right placed bar 1`] = `
 "                                                                                
-                              ┌─────┐                                           
-                              │Pshhh│                                           
-                              │h    │                                           
-                              │     │                                           
-                              │     │                                           
-                              │     │                                           
-                              │     │                                           
-                              │     │                                           
-                              │     │                                           
-                              │     ┷━━━━━━━━━━━━                               
-                              │      Stronk test                                
-                              │     ┯━━━━━━━━━━━━                               
-                              │     │                                           
-                              │     │                                           
-                              │     │                                           
-                              │     │                                           
-                              │     │                                           
-                              │     │                                           
-                              │     │                                           
-                              │     │                                           
-                              │     │                                           
-                              └─────┘                                           
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                   ┌─────┐                                                      
+                   │Pshhh┷━━━━                                                  
+                   │h     Si!                                                   
+                   │     ━━━━━━━━━━━━━                                          
+                   │      Ridiculous!                                           
+                   │     ────────────────────                                   
+                   │      A much shorter one                                    
+                   │     ────────────────────────────────────                   
+                   │      A very long and strong description                    
+                   │     ┬───────────────────────────────────                   
+                   └─────┘                                                      
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
                                                                                 
 "
 `;
@@ -123,9 +123,9 @@ exports[`tests inserting tabs at defined position in panel 1`] = `
                                                                                 
                                                                                 
                                                                                 
- ┌───────────────────────────┤ So │ Much │ Stonks ├───────────────────────────┐ 
- │Ahhhhh                                                                      │ 
- └────────────────────────────────────────────────────────────────────────────┘ 
+                      ┌──────┤ So ┃ Much ┃ Stonks ├──────┐                      
+                      │Ahhhhh                            │                      
+                      └──────────────────────────────────┘                      
                                                                                 
                                                                                 
                                                                                 
@@ -226,28 +226,28 @@ exports[`tests switching tabs 1`] = `
 
 exports[`tests the sending of keys in vertical mode 1`] = `
 "                                                                                
-                                           ┌─────┐                              
-                                           │Pshhh│                              
-                                           │h    │                              
-                                           │     │                              
-                                           │     │                              
-                                           │     │                              
-                                           │     │                              
-                                           │     │                              
-                             ━━━━━━━━━━━━━ │     │                              
-                              Stronk test  │     │                              
-                             ━━━━━━━━━━━━━━━     │                              
-                              Stronker test      │                              
-                             ──────────────┬     │                              
-                                           │     │                              
-                                           │     │                              
-                                           │     │                              
-                                           │     │                              
-                                           │     │                              
-                                           │     │                              
-                                           │     │                              
-                                           │     │                              
-                                           └─────┘                              
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                      ┌─────┐                   
+                   ───────────────────────────────────┴Pshhh│                   
+                    A very long and strong description h    │                   
+                                   ────────────────────     │                   
+                                    A much shorter one      │                   
+                                          ─────────────     │                   
+                                           Ridiculous!      │                   
+                                                  ━━━━━     │                   
+                                                   Si!      │                   
+                                                  ━━━━━     │                   
+                                                      └─────┘                   
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
                                                                                 
 "
 `;
