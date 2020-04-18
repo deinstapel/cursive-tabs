@@ -1,7 +1,7 @@
 {
-  "color": "orange",
+  "color": "brightgreen",
   "isError": true,
   "label": "shellshot",
-  "message": "5 / 10 tests",
+  "message": "10 / 10 tests",
   "schemaVersion": 1
 }
