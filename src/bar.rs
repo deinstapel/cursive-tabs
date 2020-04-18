@@ -298,14 +298,25 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
                     let mut rel_sizes = self.sizes.clone();
                     rel_sizes.truncate(idx);
                     let mut print = inner_printer
+                        // Move the printer to the position of the child, respecting the height of all previous ones
                         .offset(
                             rel_sizes
                                 .iter()
                                 .fold(Vec2::new(0, 0), |acc, x| acc.stack_vertical(x))
                                 .keep_y(),
                         )
-                        // Spacing for first character
+                        // Spacing for first character of the current one and all previous ones
                         .offset((0, idx))
+                        // Offset so that the right side when aligned to the left is on the panel border
+                        .offset((
+                            if self.placement == Placement::VerticalLeft {
+                                self.bar_size.x - self.sizes[idx].x
+                            } else {
+                                0
+                            },
+                            0,
+                        ))
+                        // Crop to size including the delimiters
                         .cropped({
                             if idx == 0 || idx == self.children.len() - 1 {
                                 self.sizes[idx].stack_vertical(&Vec2::new(1, 2))
@@ -417,28 +428,13 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
         // Total size of bar
         self.bar_size = total_size;
         // Return max width and maximum height of child
+        // We need the max size of every side here so try again
         match self.placement {
-            Placement::VerticalRight | Placement::VerticalLeft => Vec2::new(
-                // Maximum width
-                self.sizes.iter().fold(0, |mut val, x| {
-                    if val < x.x {
-                        val = x.x;
-                    }
-                    val
-                }),
-                cst.y,
-            ),
             Placement::HorizontalTop | Placement::HorizontalBottom => {
-                Vec2::new(
-                    cst.x,
-                    // Maximum height
-                    self.sizes.iter().fold(0, |mut val, x| {
-                        if val < x.y {
-                            val = x.y;
-                        }
-                        val
-                    }),
-                )
+                (total_size.x * 2, total_size.y).into()
+            }
+            Placement::VerticalLeft | Placement::VerticalRight => {
+                (total_size.x, total_size.y * 2).into()
             }
         }
     }
