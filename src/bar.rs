@@ -388,11 +388,14 @@ impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
     }
 
     fn required_size(&mut self, cst: Vec2) -> Vec2 {
-        while (self.rx.len() > 1) {
+        while self.rx.len() > 1 {
             // Discard old messages
             // This may happen if more than one view gets added to before the event loop of cursive gets started, resulting
             // in an incorrect start state
-            self.rx.try_recv();
+            match self.rx.try_recv() {
+                Ok(_) => debug!("Got too many requests dropping some..."),
+                Err(e) => debug!("Other side got dropped {:?}, ignoring this error", e),
+            }
         }
         if let Ok(new_active) = self.rx.try_recv() {
             self.invalidated = true;
