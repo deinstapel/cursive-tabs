@@ -36,6 +36,8 @@
 //! // When your done setting run cursive
 //! // siv.run();
 //! ```
+extern crate cursive_core as cursive;
+
 use crossbeam::{Receiver, Sender};
 use cursive::direction::Direction;
 use cursive::event::{AnyCb, Event, EventResult};
