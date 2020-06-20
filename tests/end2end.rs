@@ -1,6 +1,6 @@
 use crossbeam::channel::{Receiver, Sender};
-use cursive::backend::puppet::observed::ObservedScreen;
-use cursive::backend::puppet::Backend;
+use cursive::backends::puppet::observed::ObservedScreen;
+use cursive::backends::puppet::Backend;
 use cursive::event::{Event, Key};
 use cursive::views::TextView;
 use cursive::Vec2;
