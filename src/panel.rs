@@ -339,6 +339,46 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabPanel<K> {
             },
         }
     }
+
+    fn check_focus_grab(&mut self, event: &Event) {
+        if let &Event::Mouse {
+            offset,
+            position,
+            event,
+        } = event
+        {
+            debug!(
+                "mouse event: offset: {:?} , position: {:?}",
+                offset, position
+            );
+            if !event.grabs_focus() {
+                return;
+            }
+
+            match self.bar_placement {
+                Placement::VerticalRight | Placement::HorizontalBottom => {
+                    if position > offset && self.tab_size.fits(position - offset) {
+                        if self.tabs.take_focus(Direction::none()) {
+                            self.bar_focused = false;
+                        }
+                    } else {
+                        self.bar_focused = true;
+                    }
+                }
+                Placement::HorizontalTop | Placement::VerticalLeft => {
+                    // Here we want conceptually position >= offset, which is what Vec2::fits does.
+                    // (The actual >= means strictly > or strictly equal, which is not _quite_ what we want in 2D.)
+                    if position.fits(offset)
+                        && (self.bar_size - Vec2::new(1, 1)).fits(position - offset)
+                    {
+                        self.bar_focused = true;
+                    } else if self.tabs.take_focus(Direction::none()) {
+                        self.bar_focused = false;
+                    }
+                }
+            }
+        }
+    }
 }
 
 impl<K: Hash + Eq + Copy + std::fmt::Display + 'static> View for TabPanel<K> {
@@ -428,37 +468,7 @@ impl<K: Hash + Eq + Copy + std::fmt::Display + 'static> View for TabPanel<K> {
     }
 
     fn on_event(&mut self, evt: Event) -> EventResult {
-        if let Event::Mouse {
-            offset, position, ..
-        } = evt
-        {
-            debug!(
-                "mouse event: offset: {:?} , position: {:?}",
-                offset, position
-            );
-            match self.bar_placement {
-                Placement::VerticalRight | Placement::HorizontalBottom => {
-                    if position > offset && self.tab_size.fits(position - offset) {
-                        if self.tabs.take_focus(Direction::front()) {
-                            self.bar_focused = false;
-                        }
-                    } else {
-                        self.bar_focused = true;
-                    }
-                }
-                Placement::HorizontalTop | Placement::VerticalLeft => {
-                    // We need to compare each individual value since the comparions with `>=` on the XY struct dPartialOrdoes not work as expected. When one value is the same but the other not it does not match although it should.
-                    if position.x >= offset.x
-                        && position.y >= offset.y
-                        && (self.bar_size - Vec2::new(1, 1)).fits(position - offset)
-                    {
-                        self.bar_focused = true;
-                    } else if self.tabs.take_focus(Direction::front()) {
-                        self.bar_focused = false;
-                    }
-                }
-            }
-        }
+        self.check_focus_grab(&evt);
 
         if self.bar_focused {
             self.on_event_focused(evt)
