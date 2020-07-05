@@ -53,7 +53,7 @@ fn main() {
                     .child(Button::new("Switch", |siv| {
                         let mut tabs: cursive::views::ViewRef<TabPanel<i32>> =
                             siv.find_name("Tabs").expect("id not found");
-                        tabs.swap_tabs(1, 2);
+                        tabs.swap_tabs(&1, &2);
                     })),
             ),
     );

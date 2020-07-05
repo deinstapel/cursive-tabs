@@ -8,7 +8,7 @@ fn main() {
         .with_tab_at("So", TextView::new("Fooooo"), 0)
         .with_tab_at("Much", TextView::new("Ahhhhh"), 1)
         .with_bar_alignment(Align::Center);
-    tabs.swap_tabs("So", "Stonks");
+    tabs.swap_tabs(&"So", &"Stonks");
     siv.add_layer(tabs);
     siv.run();
 }

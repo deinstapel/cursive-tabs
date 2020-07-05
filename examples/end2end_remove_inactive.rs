@@ -6,7 +6,7 @@ fn main() {
     let mut tabs = TabView::new()
         .with_tab(0, TextView::new("First"))
         .with_tab(1, TextView::new("Second"));
-    tabs.remove_tab(0).expect("Removal failed.");
+    tabs.remove_tab(&0).expect("Removal failed.");
     siv.add_layer(tabs);
     siv.run();
 }
