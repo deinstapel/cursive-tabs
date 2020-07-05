@@ -56,7 +56,7 @@ impl Align {
 /// ```
 ///
 /// A TabView is also usable separately, so if you prefer the tabs without the TabBar and Panel around have a look at `TabView`.
-pub struct TabPanel<K: Hash + Eq + Display + Copy + 'static> {
+pub struct TabPanel<K: Hash + Eq + Display + Clone + 'static> {
     bar: TabBar<K>,
     bar_size: Vec2,
     tab_size: Vec2,
@@ -67,13 +67,13 @@ pub struct TabPanel<K: Hash + Eq + Display + Copy + 'static> {
     bar_placement: Placement,
 }
 
-impl<K: Hash + Eq + Copy + Display + 'static> Default for TabPanel<K> {
+impl<K: Hash + Eq + Clone + Display + 'static> Default for TabPanel<K> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<K: Hash + Eq + Copy + Display + 'static> TabPanel<K> {
+impl<K: Hash + Eq + Clone + Display + 'static> TabPanel<K> {
     /// Returns a new instance of a TabPanel.
     /// Alignment is set by default to left, to change this use `set_bar_alignment` to change to any other `HAlign` provided by `cursive`.
     pub fn new() -> Self {
@@ -98,7 +98,7 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabPanel<K> {
 
     /// Returns the current active tab of the `TabView`.
     /// Note: Calls `active_tab` on the enclosed `TabView`.
-    pub fn active_tab(&self) -> Option<K> {
+    pub fn active_tab(&self) -> Option<&K> {
         self.tabs.active_tab()
     }
 
@@ -121,21 +121,21 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabPanel<K> {
     /// Non-consuming variant to add new tabs to the `TabView`.
     /// Note: Calls `add_tab` on the enclosed `TabView`.
     pub fn add_tab<T: View>(&mut self, id: K, view: T) {
-        self.tabs.add_tab(id, view);
+        self.tabs.add_tab(id.clone(), view);
         self.bar.add_button(self.tx.clone(), id);
     }
 
     /// Consuming & Chainable variant to add a new tab.
     /// Note: Calls `add_tab` on the enclosed `TabView`.
     pub fn with_tab<T: View>(mut self, id: K, view: T) -> Self {
-        self.tabs.add_tab(id, view);
+        self.tabs.add_tab(id.clone(), view);
         self.bar.add_button(self.tx.clone(), id);
         self
     }
 
     /// Swaps the given tab keys.
     /// If at least one of them cannot be found then no operation is performed
-    pub fn swap_tabs(&mut self, fst: K, snd: K) {
+    pub fn swap_tabs(&mut self, fst: &K, snd: &K) {
         self.tabs.swap_tabs(fst, snd);
         self.bar.swap_button(fst, snd);
     }
@@ -144,7 +144,7 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabPanel<K> {
     /// It is fail-safe, if the postion is greater than the amount of tabs, it is appended to the end.
     /// Note: Calls `add_tab_at` on the enclosed `TabView`.
     pub fn add_tab_at<T: View>(&mut self, id: K, view: T, pos: usize) {
-        self.tabs.add_tab_at(id, view, pos);
+        self.tabs.add_tab_at(id.clone(), view, pos);
         self.bar.add_button_at(self.tx.clone(), id, pos);
     }
 
@@ -152,13 +152,13 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabPanel<K> {
     /// It is fail-safe, if the postion is greater than the amount of tabs, it is appended to the end.
     /// Note: Calls `add_tab_at` on the enclosed `TabView`.
     pub fn with_tab_at<T: View>(mut self, id: K, view: T, pos: usize) -> Self {
-        self.tabs.add_tab_at(id, view, pos);
+        self.tabs.add_tab_at(id.clone(), view, pos);
         self.bar.add_button_at(self.tx.clone(), id, pos);
         self
     }
 
     /// Remove a tab of the enclosed `TabView`.
-    pub fn remove_tab(&mut self, id: K) -> Result<(), ()> {
+    pub fn remove_tab(&mut self, id: &K) -> Result<(), ()> {
         self.bar.remove_button(id);
         self.tabs.remove_tab(id)
     }
@@ -381,7 +381,7 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabPanel<K> {
     }
 }
 
-impl<K: Hash + Eq + Copy + std::fmt::Display + 'static> View for TabPanel<K> {
+impl<K: Hash + Eq + Clone + std::fmt::Display + 'static> View for TabPanel<K> {
     fn draw(&self, printer: &Printer) {
         self.draw_outer_panel(printer);
         let printer_bar = printer
