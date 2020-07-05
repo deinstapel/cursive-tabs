@@ -1,6 +1,7 @@
 use cursive::view::{Boxable, Identifiable};
 use cursive::views::{Button, LinearLayout, PaddedView, TextArea, TextView};
 use cursive::Cursive;
+use cursive::CursiveExt;
 use cursive_tabs::{Align, Placement, TabPanel};
 
 const TAB_0: &str =
