@@ -1,5 +1,6 @@
 use cursive::views::TextView;
 use cursive_tabs::TabView;
+use cursive::CursiveExt;
 
 use cursive::Cursive;
 

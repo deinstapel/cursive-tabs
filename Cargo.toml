@@ -13,14 +13,14 @@ documentation = "https://docs.rs/cursive-tabs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-cursive = { version = "0.14.0", default-features = false }
+cursive = { version = "0.15.0", default-features = false }
 crossbeam = "0.7.3"
 log = "0.4.8"
 num = "0.2.1"
 
 [dev-dependencies]
 serde_json = "1.0.48"
-cursive = "0.14.0"
+cursive = "0.15.0"
 
 [badges]
 travis-ci = { repository = "deinstapel/cursive-tabs" }
