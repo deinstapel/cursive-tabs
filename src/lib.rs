@@ -8,9 +8,9 @@
 //! # Example
 //! All you need to do to create a new `TabView` is:
 //! ```
-//! # use cursive::{Cursive, views::{TextView, Dialog}};
+//! # use cursive::{views::{TextView, Dialog}};
 //! # use cursive_tabs::TabView;
-//! # let mut siv = Cursive::default();
+//! # let mut siv = cursive::default();
 //! let mut tabs = TabView::new();
 //! # // That is all what is needed to display an empty TabView, but of course
 //! # // you can add your own tabs now and switch them around as you want!
@@ -24,10 +24,10 @@
 //!
 //! # Full Example
 //! ```
-//! use cursive::{Cursive, views::{TextView, Dialog}};
+//! use cursive::{views::{TextView, Dialog}};
 //! use cursive_tabs::TabView;
 //!
-//! let mut siv = Cursive::default();
+//! let mut siv = cursive::default();
 //! let mut tabs = TabView::new();
 //! // That is all what is needed to display an empty TabView, but of course
 //! // you can add your own tabs now and switch them around as you want!
@@ -36,6 +36,8 @@
 //! // When your done setting run cursive
 //! // siv.run();
 //! ```
+extern crate cursive_core as cursive;
+
 use crossbeam::{Receiver, Sender};
 use cursive::direction::Direction;
 use cursive::event::{AnyCb, Event, EventResult};
@@ -72,9 +74,9 @@ impl<K: Hash + Eq + Copy + 'static> TabView<K> {
     /// Returns a new TabView
     /// # Example
     /// ```
-    /// # use cursive::{Cursive, views::{TextView, Dialog}};
+    /// # use cursive::{views::{TextView, Dialog}};
     /// # use cursive_tabs::TabView;
-    /// #  let mut siv = Cursive::default();
+    /// #  let mut siv = cursive::default();
     /// let mut tabs = TabView::new();
     /// #  // That is all what is needed to display an empty TabView, but of course
     /// #  // you can add your own tabs now and switch them around as you want!

@@ -1,10 +1,8 @@
 use cursive::views::TextView;
 use cursive_tabs::{Align, TabPanel};
 
-use cursive::Cursive;
-
 fn main() {
-    let mut siv = Cursive::default();
+    let mut siv = cursive::default();
     let tabs = TabPanel::new()
         .with_tab("Stronk test", TextView::new("Pshhhh"))
         .with_active_tab("Stronk test")

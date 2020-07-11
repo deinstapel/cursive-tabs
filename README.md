@@ -58,10 +58,10 @@ Below it is the `TabView` showing the current tab.
 It can be created by simply calling new on `TabPanel` and views and customize it as you want, have a look at the [documentation](https://docs.rs/cursive-tabs) to see all options.
 
 ```rust
-use cursive::{TextView, Cursive}
+use cursive::TextView;
 use cursive_tabs::TabPanel;
 
-let mut siv = Cursive::default;
+let mut siv = cursive::default();
 
 //Create your panel and add tabs
 let mut panel = TabPanel::new()
@@ -78,10 +78,10 @@ This crate also provides a struct `TabView` you can use to add tabs and switch b
 The `TabView` can also be used to create your own Panel/Bar if you want to design your cursive environment a different way.
 
 ```rust
-use cursive::{views::TextView, Cursive};
+use cursive::{views::TextView};
 use cursive_tabs::TabView;
 
-let mut siv = Cursive::default();
+let mut siv = cursive::default();
 let tabs = TabView::new().with_tab(0, TextView::new("Our first tab!"));
 // We can continue to add as many tabs as we want!
 

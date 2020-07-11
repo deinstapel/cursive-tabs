@@ -1,6 +1,5 @@
 use cursive::view::{Boxable, Identifiable};
 use cursive::views::{Button, LinearLayout, PaddedView, TextArea, TextView};
-use cursive::Cursive;
 use cursive_tabs::{Align, TabPanel};
 
 const TAB_0: &str =
@@ -24,7 +23,7 @@ to your Cargo.toml!
 ";
 
 fn main() {
-    let mut siv = Cursive::default();
+    let mut siv = cursive::default();
     let panel = TabPanel::new()
         .with_tab(0, TextView::new(TAB_0))
         .with_tab(1, TextView::new(TAB_1))
