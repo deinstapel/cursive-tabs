@@ -138,7 +138,7 @@ fn end2end_remove_active() {
         let mut tabs = TabView::new()
             .with_tab(0, TextView::new("First"))
             .with_tab(1, TextView::new("Second"));
-        tabs.remove_tab(1).expect("Removal of active tab failed");
+        tabs.remove_tab(&1).expect("Removal of active tab failed");
         siv.add_layer(tabs);
     });
     assert_display_snapshot!(frames.try_iter().last().unwrap());
@@ -150,7 +150,7 @@ fn end2end_remove_inactive() {
         let mut tabs = TabView::new()
             .with_tab(0, TextView::new("First"))
             .with_tab(1, TextView::new("Second"));
-        tabs.remove_tab(0).expect("Removal failed.");
+        tabs.remove_tab(&0).expect("Removal failed.");
         siv.add_layer(tabs);
     });
     assert_display_snapshot!(frames.try_iter().last().unwrap());
@@ -164,7 +164,7 @@ fn end2end_swap() {
             .with_tab_at("So", TextView::new("Fooooo"), 0)
             .with_tab_at("Much", TextView::new("Ahhhhh"), 1)
             .with_bar_alignment(Align::Center);
-        tabs.swap_tabs("So", "Stonks");
+        tabs.swap_tabs(&"So", &"Stonks");
         siv.add_layer(tabs);
     });
     assert_display_snapshot!(frames.try_iter().last().unwrap());
