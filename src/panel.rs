@@ -263,13 +263,11 @@ impl<K: Hash + Eq + Clone + Display + 'static> TabPanel<K> {
     }
 
     fn on_event_focused(&mut self, evt: Event) -> EventResult {
-        match self
-            .bar
-            .on_event(evt.clone().relativized(match self.bar_placement {
-                Placement::HorizontalTop | Placement::VerticalLeft => Vec2::new(0, 0),
-                Placement::HorizontalBottom => self.tab_size.keep_y() + Vec2::new(0, 1),
-                Placement::VerticalRight => self.tab_size.keep_x() + Vec2::new(1, 0),
-            })) {
+        match self.bar.on_event(evt.relativized(match self.bar_placement {
+            Placement::HorizontalTop | Placement::VerticalLeft => Vec2::new(0, 0),
+            Placement::HorizontalBottom => self.tab_size.keep_y() + Vec2::new(0, 1),
+            Placement::VerticalRight => self.tab_size.keep_x() + Vec2::new(1, 0),
+        })) {
             EventResult::Consumed(cb) => EventResult::Consumed(cb),
             EventResult::Ignored => match evt {
                 Event::Key(Key::Down) if self.bar_placement == Placement::HorizontalTop => {
@@ -341,11 +339,11 @@ impl<K: Hash + Eq + Clone + Display + 'static> TabPanel<K> {
     }
 
     fn check_focus_grab(&mut self, event: &Event) {
-        if let &Event::Mouse {
+        if let Event::Mouse {
             offset,
             position,
             event,
-        } = event
+        } = *event
         {
             debug!(
                 "mouse event: offset: {:?} , position: {:?}",
