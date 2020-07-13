@@ -111,11 +111,11 @@ impl<K: Hash + Eq + Clone + Display + 'static> TabPanel<K> {
     /// Consuming & Chainable variant to set the active tab in the `TabView`.
     ///  Note: Calls `set_active_tab` on the enclosed `TabView`.
     ///
-    /// Be careful! Failure in this case means the panel get dropped this has to with some trait restrictions in cursive, at the moment just avoid using the chainable variant if you are unsure that the operation will succeed.
-    pub fn with_active_tab(mut self, id: K) -> Result<Self, ()> {
-        // TODO: Return Self in error case, this is borked as of now
-        self.tabs.set_active_tab(id)?;
-        Ok(self)
+    pub fn with_active_tab(mut self, id: K) -> Result<Self, Self> {
+        match self.tabs.set_active_tab(id) {
+            Ok(_) => Ok(self),
+            Err(_) => Err(self),
+        }
     }
 
     /// Non-consuming variant to add new tabs to the `TabView`.

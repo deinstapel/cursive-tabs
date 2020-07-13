@@ -126,9 +126,11 @@ impl<K: Hash + Eq + Clone + 'static> TabView<K> {
     /// If the tab id is not known, an error is returned and no action is performed.
     ///
     /// This is the consumable variant.
-    pub fn with_active_tab(mut self, id: K) -> Result<Self, ()> {
-        self.set_active_tab(id)?;
-        Ok(self)
+    pub fn with_active_tab(mut self, id: K) -> Result<Self, Self> {
+        match self.set_active_tab(id) {
+            Ok(_) => Ok(self),
+            Err(_) => Err(self),
+        }
     }
 
     /// Add a new tab to the tab view.
@@ -257,7 +259,7 @@ impl<K: Hash + Eq + Clone + 'static> TabView<K> {
     pub fn prev(&mut self) {
         if let Some(cur_key) = self.current_id.as_ref().cloned() {
             let idx_key = Self::index_key(&cur_key, &self.key_order);
-            let idx     = (self.key_order.len() + idx_key - 1) % self.key_order.len();
+            let idx = (self.key_order.len() + idx_key - 1) % self.key_order.len();
 
             self.set_active_tab(self.key_order[idx].clone())
                 .expect("Key content changed during operation, this should not happen");
