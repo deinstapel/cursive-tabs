@@ -248,7 +248,7 @@ impl<K: Hash + Eq + Clone + 'static> TabView<K> {
     /// Set the active tab to the next tab in order.
     pub fn next(&mut self) {
         if let Some(cur_key) = &self.current_id {
-            let idx = (Self::index_key(&cur_key, &self.key_order) + 1) & self.key_order.len();
+            let idx = (Self::index_key(&cur_key, &self.key_order) + 1) % self.key_order.len();
 
             self.set_active_tab(self.key_order[idx].clone())
                 .expect("Key content changed during operation, this should not happen");
