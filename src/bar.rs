@@ -11,10 +11,10 @@ use std::hash::Hash;
 use crate::panel::{Align, Placement};
 
 /// Trait which defines which basic action a tab bar should be able to handle
-pub trait Bar<K: Hash + Eq + Copy + Display + 'static> {
+pub trait Bar<K: Hash + Eq + Clone + Display + 'static> {
     fn add_button(&mut self, tx: Sender<K>, key: K);
-    fn remove_button(&mut self, key: K);
-    fn swap_button(&mut self, left: K, right: K);
+    fn remove_button(&mut self, key: &K);
+    fn swap_button(&mut self, left: &K, right: &K);
     fn add_button_at(&mut self, tx: Sender<K>, key: K, pos: usize);
 }
 
@@ -39,7 +39,7 @@ impl<T: View, K> PositionWrap<T, K> {
     }
 }
 
-pub struct TabBar<K: Hash + Eq + Copy + Display + 'static> {
+pub struct TabBar<K: Hash + Eq + Clone + Display + 'static> {
     children: Vec<PositionWrap<Button, K>>,
     bar_size: Vec2,
     align: Align,
@@ -53,7 +53,7 @@ pub struct TabBar<K: Hash + Eq + Copy + Display + 'static> {
     invalidated: bool,
 }
 
-impl<K: Hash + Eq + Copy + Display + 'static> TabBar<K> {
+impl<K: Hash + Eq + Clone + Display + 'static> TabBar<K> {
     pub fn new(rx: Receiver<K>) -> Self {
         Self {
             children: Vec::new(),
@@ -120,11 +120,12 @@ impl<K: Hash + Eq + Copy + Display + 'static> TabBar<K> {
     }
 }
 
-impl<K: Hash + Eq + Copy + Display + 'static> Bar<K> for TabBar<K> {
+impl<K: Hash + Eq + Clone + Display + 'static> Bar<K> for TabBar<K> {
     fn add_button(&mut self, tx: Sender<K>, key: K) {
+        let k = key.clone();
         let button = Button::new_raw(format!(" {} ", key), move |_| {
-            debug!("send {}", key);
-            match tx.send(key) {
+            debug!("send {}", k);
+            match tx.send(k.clone()) {
                 Ok(_) => {}
                 Err(err) => {
                     debug!("button could not send key: {:?}", err);
@@ -137,14 +138,14 @@ impl<K: Hash + Eq + Copy + Display + 'static> Bar<K> for TabBar<K> {
         self.invalidated = true;
     }
 
-    fn remove_button(&mut self, key: K) {
+    fn remove_button(&mut self, key: &K) {
         if let Some(pos) = self
             .children
             .iter()
             .enumerate()
             .filter_map(
                 |(pos, button)| {
-                    if button.key == key {
+                    if button.key == *key {
                         Some(pos)
                     } else {
                         None
@@ -164,13 +165,13 @@ impl<K: Hash + Eq + Copy + Display + 'static> Bar<K> for TabBar<K> {
         self.invalidated = true;
     }
 
-    fn swap_button(&mut self, first: K, second: K) {
+    fn swap_button(&mut self, first: &K, second: &K) {
         let pos: Vec<usize> = self
             .children
             .iter()
             .enumerate()
             .filter_map(|(pos, button)| {
-                if button.key == first || button.key == second {
+                if button.key == *first || button.key == *second {
                     Some(pos)
                 } else {
                     None
@@ -187,9 +188,10 @@ impl<K: Hash + Eq + Copy + Display + 'static> Bar<K> for TabBar<K> {
     }
 
     fn add_button_at(&mut self, tx: Sender<K>, key: K, pos: usize) {
+        let k = key.clone();
         let button = Button::new_raw(format!(" {} ", key), move |_| {
-            debug!("send {}", key);
-            match tx.send(key) {
+            debug!("send {}", k);
+            match tx.send(k.clone()) {
                 Ok(_) => {}
                 Err(err) => {
                     debug!("button could not send key: {:?}", err);
@@ -203,7 +205,7 @@ impl<K: Hash + Eq + Copy + Display + 'static> Bar<K> for TabBar<K> {
     }
 }
 
-impl<K: Hash + Eq + Copy + Display + 'static> View for TabBar<K> {
+impl<K: Hash + Eq + Clone + Display + 'static> View for TabBar<K> {
     fn draw(&self, printer: &Printer) {
         match self.placement {
             Placement::HorizontalBottom | Placement::HorizontalTop => {
