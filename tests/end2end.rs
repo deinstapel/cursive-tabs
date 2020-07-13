@@ -125,7 +125,7 @@ fn end2end_panel_smoke() {
         let tabs = TabPanel::new()
             .with_tab("Stronk test", TextView::new("Pshhhh"))
             .with_active_tab("Stronk test")
-            .expect("Setting active tab has failed")
+            .unwrap_or_else(|_| panic!("Setting active tab has failed"))
             .with_bar_alignment(Align::Center);
         siv.add_layer(tabs);
     });
@@ -177,7 +177,7 @@ fn end2end_switch() {
             .with_tab(0, TextView::new("First"))
             .with_tab(1, TextView::new("Second"))
             .with_active_tab(0)
-            .expect("Setting tab has failed");
+            .unwrap_or_else(|_| panic!("Setting active tab has failed"));
         siv.add_layer(tabs);
     });
     assert_display_snapshot!(frames.try_iter().last().unwrap());
@@ -190,7 +190,7 @@ fn end2end_vertical_left() {
             .with_tab("Stronk test", TextView::new("Pshhhh"))
             .with_tab("Stronker test", TextView::new("Pshhhh"))
             .with_active_tab("Stronk test")
-            .expect("Setting active tab has failed")
+            .unwrap_or_else(|_| panic!("Setting active tab has failed"))
             .with_bar_alignment(Align::Center)
             .with_bar_placement(Placement::VerticalLeft);
         siv.add_layer(tabs);
@@ -205,7 +205,7 @@ fn end2end_vertical_left_with_action_change_tab() {
             .with_tab("Stronk test", TextView::new("Pshhhh"))
             .with_tab("Stronker test", TextView::new("Pshhhh"))
             .with_active_tab("Stronk test")
-            .expect("Setting active tab has failed")
+            .unwrap_or_else(|_| panic!("Setting active tab has failed"))
             .with_bar_alignment(Align::Center)
             .with_bar_placement(Placement::VerticalLeft);
         siv.add_layer(tabs);
@@ -220,7 +220,7 @@ fn end2end_vertical_right() {
         let tabs = TabPanel::new()
             .with_tab("Stronk test", TextView::new("Pshhhh"))
             .with_active_tab("Stronk test")
-            .expect("Setting active tab has failed")
+            .unwrap_or_else(|_| panic!("Setting active tab has failed"))
             .with_bar_alignment(Align::Center)
             .with_bar_placement(Placement::VerticalRight);
         siv.add_layer(tabs);

@@ -33,7 +33,9 @@ fn main() {
         .with_bar_alignment(Align::Start)
         .with_bar_placement(Placement::VerticalLeft)
         .with_active_tab(0)
-        .expect("oh no");
+        .unwrap_or_else(|_| {
+            panic!("Could not set the first tab as active tab! This is probably an issue with the implementation in the lib. Please report!");
+        });
 
     siv.add_layer(
         LinearLayout::vertical()
