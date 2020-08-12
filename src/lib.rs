@@ -214,11 +214,7 @@ impl<K: Hash + Eq + Clone + 'static> TabView<K> {
                 }
             }
             // remove_key experimental
-            self.key_order = self
-                .key_order
-                .iter()
-                .filter_map(|key| if id == key { None } else { Some(key.clone()) })
-                .collect();
+            self.key_order.retain(|k| k != id);
             self.invalidated = true;
             Ok(())
         } else {
