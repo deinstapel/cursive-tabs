@@ -13,14 +13,14 @@ documentation = "https://docs.rs/cursive-tabs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-cursive_core = { git = "https://github.com/gyscos/cursive.git" }
+cursive_core = { git = "https://github.com/gyscos/cursive.git", branch = "main" }
 crossbeam = "0.7.3"
 log = "0.4.8"
 num = "0.2.1"
 
 [dev-dependencies]
 serde_json = "1.0.48"
-cursive = { git = "https://github.com/gyscos/cursive.git" }
+cursive = { git = "https://github.com/gyscos/cursive.git", branch = "main" }
 insta = "0.13.0"
 
 [badges]
