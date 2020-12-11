@@ -58,7 +58,7 @@ Below it is the `TabView` showing the current tab.
 It can be created by simply calling new on `TabPanel` and views and customize it as you want, have a look at the [documentation](https://docs.rs/cursive-tabs) to see all options.
 
 ```rust
-use cursive::TextView;
+use cursive::views::TextView;
 use cursive_tabs::TabPanel;
 
 let mut siv = cursive::default();
