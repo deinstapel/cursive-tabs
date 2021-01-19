@@ -1,7 +1,7 @@
-use crossbeam::{unbounded, Sender};
+use crossbeam::channel::{unbounded, Sender};
 use cursive::direction::{Absolute, Direction};
 use cursive::event::{AnyCb, Event, EventResult, Key};
-use cursive::view::{Selector, View};
+use cursive::view::{Selector, View, ViewNotFound};
 use cursive::{Printer, Vec2};
 use log::debug;
 use num::clamp;
@@ -529,7 +529,7 @@ impl<K: Hash + Eq + Clone + std::fmt::Display + 'static> View for TabPanel<K> {
         true
     }
 
-    fn focus_view(&mut self, slt: &Selector) -> Result<(), ()> {
+    fn focus_view(&mut self, slt: &Selector) -> Result<(), ViewNotFound> {
         self.tabs.focus_view(slt)
     }
 

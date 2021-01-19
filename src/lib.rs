@@ -38,10 +38,10 @@
 //! ```
 extern crate cursive_core as cursive;
 
-use crossbeam::{Receiver, Sender};
+use crossbeam::channel::{Receiver, Sender};
 use cursive::direction::Direction;
 use cursive::event::{AnyCb, Event, EventResult};
-use cursive::view::{Selector, View};
+use cursive::view::{Selector, View, ViewNotFound};
 use cursive::{Printer, Rect, Vec2};
 use log::debug;
 use std::collections::HashMap;
@@ -341,15 +341,15 @@ impl<K: Hash + Eq + Clone + 'static> View for TabView<K> {
         }
     }
 
-    fn focus_view(&mut self, slt: &Selector) -> Result<(), ()> {
+    fn focus_view(&mut self, slt: &Selector) -> Result<(), ViewNotFound> {
         if let Some(key) = &self.current_id {
             if let Some(view) = self.map.get_mut(&key) {
                 view.focus_view(slt)
             } else {
-                Err(())
+                Err(ViewNotFound)
             }
         } else {
-            Err(())
+            Err(ViewNotFound)
         }
     }
 
