@@ -1,4 +1,4 @@
-use crossbeam::{Receiver, Sender};
+use crossbeam::channel::{Receiver, Sender};
 use cursive::event::{Event, EventResult, Key, MouseButton, MouseEvent};
 use cursive::theme::{Effect, PaletteColor};
 use cursive::view::{View, ViewWrapper};
