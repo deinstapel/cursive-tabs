@@ -107,6 +107,15 @@ impl TabView {
         self.active_tab().and_then(|k| self.map.get(k))
     }
 
+    pub fn get_active_tab_mut(&mut self) -> Option<&mut Box<dyn View>> {
+        if let Some(k) = self.current_id.as_ref() {
+            self.map.get_mut(k)
+        } else {
+            None
+        }
+    }
+
+
     /// Set the currently active (visible) tab.
     /// If the tab id is not known, an error is returned and no action is performed.
     pub fn set_active_tab(&mut self, id: &str) -> Result<(), error::IdNotFound> {
