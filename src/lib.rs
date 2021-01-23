@@ -103,6 +103,10 @@ impl TabView {
         self.current_id.as_deref()
     }
 
+    pub fn get_active_tab(&self) -> Option<&Box<dyn View>> {
+        self.active_tab().and_then(|k| self.map.get(k))
+    }
+
     /// Set the currently active (visible) tab.
     /// If the tab id is not known, an error is returned and no action is performed.
     pub fn set_active_tab(&mut self, id: &str) -> Result<(), error::IdNotFound> {

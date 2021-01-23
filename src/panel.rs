@@ -103,6 +103,10 @@ impl TabPanel {
         self.tabs.active_tab()
     }
 
+    pub fn get_active_tab(&self) -> Option<&Box<dyn View>> {
+        self.tabs.get_active_tab()
+    }
+
     /// Non-consuming variant to set the active tab in the `TabView`.
     /// Note: Calls `set_active_tab` on the enclosed `TabView`.
     pub fn set_active_tab(&mut self, id: &str) -> Result<(), error::IdNotFound> {
