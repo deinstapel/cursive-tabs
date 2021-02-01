@@ -60,13 +60,14 @@ It can be created by simply calling new on `TabPanel` and views and customize it
 ```rust
 use cursive::views::TextView;
 use cursive_tabs::TabPanel;
+use cursive::view::Nameable;
 
 let mut siv = cursive::default();
 
 //Create your panel and add tabs
 let mut panel = TabPanel::new()
-    .with_tab("First", TextView::new("This is the first view!"))
-    .with_tab("Second", TextView::new("This is the second view!"));
+    .with_tab(TextView::new("This is the first view!").with_name("First"))
+    .with_tab(TextView::new("This is the second view!").with_name("Second"));
 siv.add_layer(panel);
 siv.run();
 ```
@@ -80,9 +81,10 @@ The `TabView` can also be used to create your own Panel/Bar if you want to desig
 ```rust
 use cursive::{views::TextView};
 use cursive_tabs::TabView;
+use cursive::view::Nameable;
 
 let mut siv = cursive::default();
-let tabs = TabView::new().with_tab(0, TextView::new("Our first tab!"));
+let tabs = TabView::new().with_tab(TextView::new("Our first tab!").with_name("0"));
 // We can continue to add as many tabs as we want!
 
 siv.add_layer(tabs);
