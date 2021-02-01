@@ -2,11 +2,10 @@ use crossbeam::channel::{unbounded, Sender};
 use cursive::direction::{Absolute, Direction};
 use cursive::event::{AnyCb, Event, EventResult, Key};
 use cursive::view::{Selector, View, ViewNotFound};
+use cursive::views::NamedView;
 use cursive::{Printer, Vec2};
 use log::debug;
 use num::clamp;
-use std::fmt::Display;
-use std::hash::Hash;
 
 use crate::Bar;
 use crate::TabBar;
@@ -56,24 +55,24 @@ impl Align {
 /// ```
 ///
 /// A TabView is also usable separately, so if you prefer the tabs without the TabBar and Panel around have a look at `TabView`.
-pub struct TabPanel<K: Hash + Eq + Display + Clone + 'static> {
-    bar: TabBar<K>,
+pub struct TabPanel {
+    bar: TabBar,
     bar_size: Vec2,
     tab_size: Vec2,
-    tx: Sender<K>,
-    tabs: TabView<K>,
+    tx: Sender<String>,
+    tabs: TabView,
     bar_focused: bool,
     bar_align: Align,
     bar_placement: Placement,
 }
 
-impl<K: Hash + Eq + Clone + Display + 'static> Default for TabPanel<K> {
+impl Default for TabPanel {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<K: Hash + Eq + Clone + Display + 'static> TabPanel<K> {
+impl TabPanel {
     /// Returns a new instance of a TabPanel.
     /// Alignment is set by default to left, to change this use `set_bar_alignment` to change to any other `HAlign` provided by `cursive`.
     pub fn new() -> Self {
@@ -98,20 +97,20 @@ impl<K: Hash + Eq + Clone + Display + 'static> TabPanel<K> {
 
     /// Returns the current active tab of the `TabView`.
     /// Note: Calls `active_tab` on the enclosed `TabView`.
-    pub fn active_tab(&self) -> Option<&K> {
+    pub fn active_tab(&self) -> Option<&str> {
         self.tabs.active_tab()
     }
 
     /// Non-consuming variant to set the active tab in the `TabView`.
     /// Note: Calls `set_active_tab` on the enclosed `TabView`.
-    pub fn set_active_tab(&mut self, id: K) -> Result<(), ()> {
+    pub fn set_active_tab(&mut self, id: &str) -> Result<(), ()> {
         self.tabs.set_active_tab(id)
     }
 
     /// Consuming & Chainable variant to set the active tab in the `TabView`.
     ///  Note: Calls `set_active_tab` on the enclosed `TabView`.
     ///
-    pub fn with_active_tab(mut self, id: K) -> Result<Self, Self> {
+    pub fn with_active_tab(mut self, id: &str) -> Result<Self, Self> {
         match self.tabs.set_active_tab(id) {
             Ok(_) => Ok(self),
             Err(_) => Err(self),
@@ -120,22 +119,24 @@ impl<K: Hash + Eq + Clone + Display + 'static> TabPanel<K> {
 
     /// Non-consuming variant to add new tabs to the `TabView`.
     /// Note: Calls `add_tab` on the enclosed `TabView`.
-    pub fn add_tab<T: View>(&mut self, id: K, view: T) {
-        self.tabs.add_tab(id.clone(), view);
+    pub fn add_tab<T: View>(&mut self, view: NamedView<T>) {
+        let id = view.name();
         self.bar.add_button(self.tx.clone(), id);
+        self.tabs.add_tab(view);
     }
 
     /// Consuming & Chainable variant to add a new tab.
     /// Note: Calls `add_tab` on the enclosed `TabView`.
-    pub fn with_tab<T: View>(mut self, id: K, view: T) -> Self {
-        self.tabs.add_tab(id.clone(), view);
+    pub fn with_tab<T: View>(mut self, view: NamedView<T>) -> Self {
+        let id = view.name();
         self.bar.add_button(self.tx.clone(), id);
+        self.tabs.add_tab(view);
         self
     }
 
     /// Swaps the given tab keys.
     /// If at least one of them cannot be found then no operation is performed
-    pub fn swap_tabs(&mut self, fst: &K, snd: &K) {
+    pub fn swap_tabs(&mut self, fst: &str, snd: &str) {
         self.tabs.swap_tabs(fst, snd);
         self.bar.swap_button(fst, snd);
     }
@@ -143,22 +144,24 @@ impl<K: Hash + Eq + Clone + Display + 'static> TabPanel<K> {
     /// Non-consuming variant to add new tabs to the `TabView` at a certain position.
     /// It is fail-safe, if the postion is greater than the amount of tabs, it is appended to the end.
     /// Note: Calls `add_tab_at` on the enclosed `TabView`.
-    pub fn add_tab_at<T: View>(&mut self, id: K, view: T, pos: usize) {
-        self.tabs.add_tab_at(id.clone(), view, pos);
+    pub fn add_tab_at<T: View>(&mut self, view: NamedView<T>, pos: usize) {
+        let id = view.name();
         self.bar.add_button_at(self.tx.clone(), id, pos);
+        self.tabs.add_tab_at(view, pos);
     }
 
     /// Consuming & Chainable variant to add a new tab at a certain position.
     /// It is fail-safe, if the postion is greater than the amount of tabs, it is appended to the end.
     /// Note: Calls `add_tab_at` on the enclosed `TabView`.
-    pub fn with_tab_at<T: View>(mut self, id: K, view: T, pos: usize) -> Self {
-        self.tabs.add_tab_at(id.clone(), view, pos);
+    pub fn with_tab_at<T: View>(mut self, view: NamedView<T>, pos: usize) -> Self {
+        let id = view.name();
         self.bar.add_button_at(self.tx.clone(), id, pos);
+        self.tabs.add_tab_at(view, pos);
         self
     }
 
     /// Remove a tab of the enclosed `TabView`.
-    pub fn remove_tab(&mut self, id: &K) -> Result<(), ()> {
+    pub fn remove_tab(&mut self, id: &str) -> Result<(), ()> {
         self.bar.remove_button(id);
         self.tabs.remove_tab(id)
     }
@@ -197,7 +200,7 @@ impl<K: Hash + Eq + Clone + Display + 'static> TabPanel<K> {
     }
 
     /// Returns the current order of tabs as an Vector with the keys of the views.
-    pub fn tab_order(&self) -> Vec<K> {
+    pub fn tab_order(&self) -> Vec<String> {
         self.tabs.tab_order()
     }
 
@@ -379,7 +382,7 @@ impl<K: Hash + Eq + Clone + Display + 'static> TabPanel<K> {
     }
 }
 
-impl<K: Hash + Eq + Clone + std::fmt::Display + 'static> View for TabPanel<K> {
+impl View for TabPanel {
     fn draw(&self, printer: &Printer) {
         self.draw_outer_panel(printer);
         let printer_bar = printer
@@ -476,7 +479,7 @@ impl<K: Hash + Eq + Clone + std::fmt::Display + 'static> View for TabPanel<K> {
     }
 
     fn take_focus(&mut self, d: Direction) -> bool {
-        let tabs_take_focus = |panel: &mut TabPanel<K>, d: Direction| {
+        let tabs_take_focus = |panel: &mut TabPanel, d: Direction| {
             if panel.tabs.take_focus(d) {
                 panel.bar_focused = false;
             } else {

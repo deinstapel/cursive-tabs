@@ -25,14 +25,14 @@ to your Cargo.toml!
 fn main() {
     let mut siv = cursive::default();
     let panel = TabPanel::new()
-        .with_tab(0, TextView::new(TAB_0))
-        .with_tab(1, TextView::new(TAB_1))
-        .with_tab(2, TextView::new(TAB_2))
-        .with_tab(3, TextView::new(TAB_3))
-        .with_tab(4, PaddedView::lrtb(2, 2, 1, 1, TextArea::new()))
-        .with_bar_alignment(Align::Start)
+        .with_tab(TextView::new(TAB_0).with_name("0"))
+        .with_tab(TextView::new(TAB_1).with_name("1"))
+        .with_tab(TextView::new(TAB_2).with_name("2"))
+        .with_tab(TextView::new(TAB_3).with_name("3"))
+        .with_tab(PaddedView::lrtb(2, 2, 1, 1, TextArea::new()).with_name("4"))
+        .with_bar_alignment(Align::End)
         .with_bar_placement(Placement::VerticalLeft)
-        .with_active_tab(0)
+        .with_active_tab("0")
         .unwrap_or_else(|_| {
             panic!("Could not set the first tab as active tab! This is probably an issue with the implementation in the lib. Please report!");
         });
@@ -43,19 +43,19 @@ fn main() {
             .child(
                 LinearLayout::horizontal()
                     .child(Button::new("Prev", |siv| {
-                        let mut tabs: cursive::views::ViewRef<TabPanel<i32>> =
+                        let mut tabs: cursive::views::ViewRef<TabPanel> =
                             siv.find_name("Tabs").expect("id not found");
                         tabs.prev();
                     }))
                     .child(Button::new("Next", |siv| {
-                        let mut tabs: cursive::views::ViewRef<TabPanel<i32>> =
+                        let mut tabs: cursive::views::ViewRef<TabPanel> =
                             siv.find_name("Tabs").expect("id not found");
                         tabs.next();
                     }))
                     .child(Button::new("Switch", |siv| {
-                        let mut tabs: cursive::views::ViewRef<TabPanel<i32>> =
+                        let mut tabs: cursive::views::ViewRef<TabPanel> =
                             siv.find_name("Tabs").expect("id not found");
-                        tabs.swap_tabs(&1, &2);
+                        tabs.swap_tabs("1", "2");
                     })),
             ),
     );

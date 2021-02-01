@@ -42,10 +42,10 @@ use crossbeam::channel::{Receiver, Sender};
 use cursive::direction::Direction;
 use cursive::event::{AnyCb, Event, EventResult};
 use cursive::view::{Selector, View, ViewNotFound};
+use cursive::views::NamedView;
 use cursive::{Printer, Rect, Vec2};
 use log::debug;
 use std::collections::HashMap;
-use std::hash::Hash;
 
 mod bar;
 mod panel;
@@ -53,24 +53,25 @@ mod panel;
 // Reexports
 use bar::{Bar, TabBar};
 pub use panel::{Align, Placement, TabPanel};
-
 /// Main struct which manages views
-pub struct TabView<K: Hash + Eq + Clone + 'static> {
-    current_id: Option<K>,
-    map: HashMap<K, Box<dyn View>>,
-    key_order: Vec<K>,
-    bar_rx: Option<Receiver<K>>,
-    active_key_tx: Option<Sender<K>>,
+pub struct TabView {
+    current_id: Option<String>,
+    // Version 0.6 changes this to only contain NamedViews, in the map this remains the same type though
+    // as NamedViews cannot be sized properly due to their enclosed view trait object
+    map: HashMap<String, Box<dyn View>>,
+    key_order: Vec<String>,
+    bar_rx: Option<Receiver<String>>,
+    active_key_tx: Option<Sender<String>>,
     invalidated: bool,
 }
 
-impl<K: Hash + Eq + Clone + 'static> Default for TabView<K> {
+impl Default for TabView {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<K: Hash + Eq + Clone + 'static> TabView<K> {
+impl TabView {
     /// Returns a new TabView
     /// # Example
     /// ```
@@ -97,16 +98,16 @@ impl<K: Hash + Eq + Clone + 'static> TabView<K> {
     }
 
     /// Returns the currently active tab Id.
-    pub fn active_tab(&self) -> Option<&K> {
-        self.current_id.as_ref()
+    pub fn active_tab(&self) -> Option<&str> {
+        self.current_id.as_ref().and_then(|v| Some(v.as_str()))
     }
 
     /// Set the currently active (visible) tab.
     /// If the tab id is not known, an error is returned and no action is performed.
-    pub fn set_active_tab(&mut self, id: K) -> Result<(), ()> {
-        if self.map.contains_key(&id) {
+    pub fn set_active_tab(&mut self, id: &str) -> Result<(), ()> {
+        if self.map.contains_key(id) {
             if let Some(sender) = &self.active_key_tx {
-                match sender.send(id.clone()) {
+                match sender.send(id.to_owned()) {
                     Ok(_) => {}
                     Err(e) => debug!(
                         "error occured while trying to send new active key to sender: {}",
@@ -114,7 +115,7 @@ impl<K: Hash + Eq + Clone + 'static> TabView<K> {
                     ),
                 }
             }
-            self.current_id = Some(id);
+            self.current_id = Some(id.to_owned());
             self.invalidated = true;
             Ok(())
         } else {
@@ -126,7 +127,7 @@ impl<K: Hash + Eq + Clone + 'static> TabView<K> {
     /// If the tab id is not known, an error is returned and no action is performed.
     ///
     /// This is the consumable variant.
-    pub fn with_active_tab(mut self, id: K) -> Result<Self, Self> {
+    pub fn with_active_tab(mut self, id: &str) -> Result<Self, Self> {
         match self.set_active_tab(id) {
             Ok(_) => Ok(self),
             Err(_) => Err(self),
@@ -135,7 +136,8 @@ impl<K: Hash + Eq + Clone + 'static> TabView<K> {
 
     /// Add a new tab to the tab view.
     /// The new tab will be set active and will be the visible tab for this tab view.
-    pub fn add_tab<T: View>(&mut self, id: K, view: T) {
+    pub fn add_tab<T: View>(&mut self, view: NamedView<T>) {
+        let id = view.name().to_owned();
         self.map.insert(id.clone(), Box::new(view));
         self.key_order.push(id.clone());
         self.current_id = Some(id);
@@ -145,8 +147,8 @@ impl<K: Hash + Eq + Clone + 'static> TabView<K> {
     /// The new tab will be set active and will be the visible tab for this tab view.
     ///
     /// This is the consumable variant.
-    pub fn with_tab<T: View>(mut self, id: K, view: T) -> Self {
-        self.add_tab(id, view);
+    pub fn with_tab<T: View>(mut self, view: NamedView<T>) -> Self {
+        self.add_tab(view);
         self
     }
 
@@ -154,7 +156,8 @@ impl<K: Hash + Eq + Clone + 'static> TabView<K> {
     /// The new tab will be set active and will be the visible tab for this tab view.
     ///
     /// This is designed to not fail, if the given position is greater than the number of current tabs, it simply will be appended.
-    pub fn add_tab_at<T: View>(&mut self, id: K, view: T, pos: usize) {
+    pub fn add_tab_at<T: View>(&mut self, view: NamedView<T>, pos: usize) {
+        let id = view.name().to_owned();
         self.map.insert(id.clone(), Box::new(view));
         if let Some(sender) = &self.active_key_tx {
             match sender.send(id.clone()) {
@@ -179,14 +182,14 @@ impl<K: Hash + Eq + Clone + 'static> TabView<K> {
     /// It is designed to be fail-safe, if the given position is greater than the number of current tabs, it simply will be appended.
     ///
     /// This is the consumable variant.
-    pub fn with_tab_at<T: View>(mut self, id: K, view: T, pos: usize) -> Self {
-        self.add_tab_at(id, view, pos);
+    pub fn with_tab_at<T: View>(mut self, view: NamedView<T>, pos: usize) -> Self {
+        self.add_tab_at(view, pos);
         self
     }
 
     /// Swap the tabs position.
     /// If one of the given key cannot be found, then no operation is performed.
-    pub fn swap_tabs(&mut self, fst: &K, snd: &K) {
+    pub fn swap_tabs(&mut self, fst: &str, snd: &str) {
         let mut fst_pos: Option<usize> = None;
         let mut snd_pos: Option<usize> = None;
         for (pos, key) in self.tab_order().into_iter().enumerate() {
@@ -196,7 +199,6 @@ impl<K: Hash + Eq + Clone + 'static> TabView<K> {
                 _ => {}
             }
         }
-
         if let (Some(fst_pos), Some(snd_pos)) = (fst_pos, snd_pos) {
             self.key_order.swap(fst_pos, snd_pos);
         }
@@ -205,7 +207,7 @@ impl<K: Hash + Eq + Clone + 'static> TabView<K> {
     /// Removes a tab with the given id from the `TabView`.
     /// If the removed tab is active at the moment, the `TabView` will unfocus it and
     /// the focus needs to be set manually afterwards, or a new view has to be inserted.
-    pub fn remove_tab(&mut self, id: &K) -> Result<(), ()> {
+    pub fn remove_tab(&mut self, id: &str) -> Result<(), ()> {
         if self.map.remove(id).is_some() {
             if let Some(key) = &self.current_id {
                 if key == id {
@@ -226,13 +228,13 @@ impl<K: Hash + Eq + Clone + 'static> TabView<K> {
     /// When you're implementing your own tab bar, be aware that this is the current
     /// tab bar and is only a copy of the original order, modification will not be
     /// transferred and future updates in the original not displayed.
-    pub fn tab_order(&self) -> Vec<K> {
+    pub fn tab_order(&self) -> Vec<String> {
         self.key_order.clone()
     }
 
     // Returns the index of the key, length of the vector if the key is not included
     // This can be done with out sorting
-    fn index_key(cur_key: &K, key_order: &[K]) -> usize {
+    fn index_key(cur_key: &str, key_order: &[String]) -> usize {
         for (idx, key) in key_order.iter().enumerate() {
             if *key == *cur_key {
                 return idx;
@@ -246,7 +248,8 @@ impl<K: Hash + Eq + Clone + 'static> TabView<K> {
         if let Some(cur_key) = &self.current_id {
             let idx = (Self::index_key(&cur_key, &self.key_order) + 1) % self.key_order.len();
 
-            self.set_active_tab(self.key_order[idx].clone())
+            let key = &self.key_order[idx].clone();
+            self.set_active_tab(key)
                 .expect("Key content changed during operation, this should not happen");
         }
     }
@@ -257,26 +260,27 @@ impl<K: Hash + Eq + Clone + 'static> TabView<K> {
             let idx_key = Self::index_key(&cur_key, &self.key_order);
             let idx = (self.key_order.len() + idx_key - 1) % self.key_order.len();
 
-            self.set_active_tab(self.key_order[idx].clone())
+            let key =&self.key_order[idx].clone();
+            self.set_active_tab(key)
                 .expect("Key content changed during operation, this should not happen");
         }
     }
 
     /// Set the receiver for keys to be changed to
-    pub fn set_bar_rx(&mut self, rx: Receiver<K>) {
+    pub fn set_bar_rx(&mut self, rx: Receiver<String>) {
         self.bar_rx = Some(rx);
     }
 
     /// Set the sender for the key switched to
-    pub fn set_active_key_tx(&mut self, tx: Sender<K>) {
+    pub fn set_active_key_tx(&mut self, tx: Sender<String>) {
         self.active_key_tx = Some(tx);
     }
 }
 
-impl<K: Hash + Eq + Clone + 'static> View for TabView<K> {
+impl View for TabView {
     fn draw(&self, printer: &Printer) {
         if let Some(key) = &self.current_id {
-            if let Some(view) = self.map.get(&key) {
+            if let Some(view) = self.map.get(key) {
                 view.draw(printer);
             }
         }
@@ -285,7 +289,7 @@ impl<K: Hash + Eq + Clone + 'static> View for TabView<K> {
     fn layout(&mut self, size: Vec2) {
         self.invalidated = false;
         if let Some(key) = &self.current_id {
-            if let Some(view) = self.map.get_mut(&key) {
+            if let Some(view) = self.map.get_mut(key) {
                 view.layout(size);
             }
         }
@@ -294,14 +298,14 @@ impl<K: Hash + Eq + Clone + 'static> View for TabView<K> {
     fn required_size(&mut self, req: Vec2) -> Vec2 {
         if let Some(rx) = &self.bar_rx {
             if let Ok(evt) = rx.try_recv() {
-                match self.set_active_tab(evt) {
+                match self.set_active_tab(&evt) {
                     Ok(_) => {}
                     Err(err) => debug!("could not accept tab bar event: {:?}", err),
                 }
             }
         }
         if let Some(key) = &self.current_id {
-            if let Some(view) = self.map.get_mut(&key) {
+            if let Some(view) = self.map.get_mut(key) {
                 view.required_size(req)
             } else {
                 (1, 1).into()
@@ -313,7 +317,7 @@ impl<K: Hash + Eq + Clone + 'static> View for TabView<K> {
 
     fn on_event(&mut self, evt: Event) -> EventResult {
         if let Some(key) = &self.current_id {
-            if let Some(view) = self.map.get_mut(&key) {
+            if let Some(view) = self.map.get_mut(key) {
                 view.on_event(evt)
             } else {
                 EventResult::Ignored
@@ -325,7 +329,7 @@ impl<K: Hash + Eq + Clone + 'static> View for TabView<K> {
 
     fn take_focus(&mut self, src: Direction) -> bool {
         if let Some(key) = &self.current_id {
-            if let Some(view) = self.map.get_mut(&key) {
+            if let Some(view) = self.map.get_mut(key) {
                 view.take_focus(src)
             } else {
                 false
@@ -343,7 +347,7 @@ impl<K: Hash + Eq + Clone + 'static> View for TabView<K> {
 
     fn focus_view(&mut self, slt: &Selector) -> Result<(), ViewNotFound> {
         if let Some(key) = &self.current_id {
-            if let Some(view) = self.map.get_mut(&key) {
+            if let Some(view) = self.map.get_mut(key) {
                 view.focus_view(slt)
             } else {
                 Err(ViewNotFound)
@@ -355,8 +359,8 @@ impl<K: Hash + Eq + Clone + 'static> View for TabView<K> {
 
     fn needs_relayout(&self) -> bool {
         self.invalidated || {
-            if let Some(key) = self.current_id.as_ref().cloned() {
-                if let Some(view) = self.map.get(&key) {
+            if let Some(key) = &self.current_id {
+                if let Some(view) = self.map.get(key) {
                     view.needs_relayout()
                 } else {
                     false
@@ -369,7 +373,7 @@ impl<K: Hash + Eq + Clone + 'static> View for TabView<K> {
 
     fn important_area(&self, size: Vec2) -> Rect {
         if let Some(key) = &self.current_id {
-            if let Some(view) = self.map.get(&key) {
+            if let Some(view) = self.map.get(key) {
                 view.important_area(size)
             } else {
                 Rect::from((1, 1))
@@ -383,35 +387,35 @@ impl<K: Hash + Eq + Clone + 'static> View for TabView<K> {
 #[cfg(test)]
 mod test {
     use super::TabView;
-    use cursive::views::DummyView;
+    use cursive::{traits::Nameable, views::DummyView};
 
     #[test]
     fn smoke() {
-        let _ = TabView::<i32>::new();
+        let _ = TabView::new();
     }
 
     #[test]
     fn insert() {
-        let mut tabs = TabView::<i32>::new().with_tab(0, DummyView);
-        tabs.add_tab(1, DummyView);
+        let mut tabs = TabView::new().with_tab(DummyView{}.with_name("0"));
+        tabs.add_tab(DummyView{}.with_name("1"));
     }
 
     #[test]
     fn switch() {
-        let mut tabs = TabView::<i32>::new();
-        tabs.add_tab(0, DummyView);
-        tabs.add_tab(1, DummyView);
-        assert_eq!(*tabs.active_tab().expect("Id not correct"), 1);
-        tabs.set_active_tab(0).expect("Id not taken");
-        assert_eq!(*tabs.active_tab().expect("Id not correct"), 0);
+        let mut tabs = TabView::new();
+        tabs.add_tab(DummyView{}.with_name("0"));
+        tabs.add_tab(DummyView{}.with_name("1"));
+        assert_eq!(tabs.active_tab().expect("Id not correct"), "1");
+        tabs.set_active_tab("0").expect("Id not taken");
+        assert_eq!(tabs.active_tab().expect("Id not correct"), "0");
     }
 
     #[test]
     fn remove() {
-        let mut tabs = TabView::<i32>::new();
-        tabs.add_tab(0, DummyView);
-        tabs.add_tab(1, DummyView);
-        assert_eq!(tabs.remove_tab(&1), Ok(()));
+        let mut tabs = TabView::new();
+        tabs.add_tab(DummyView{}.with_name("0"));
+        tabs.add_tab(DummyView{}.with_name("1"));
+        assert_eq!(tabs.remove_tab("1"), Ok(()));
         assert!(tabs.active_tab().is_none());
     }
 }

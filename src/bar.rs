@@ -5,32 +5,30 @@ use cursive::view::{View, ViewWrapper};
 use cursive::views::Button;
 use cursive::{wrap_impl, Printer, Vec2};
 use log::debug;
-use std::fmt::Display;
-use std::hash::Hash;
 
 use crate::panel::{Align, Placement};
 
 /// Trait which defines which basic action a tab bar should be able to handle
-pub trait Bar<K: Hash + Eq + Clone + Display + 'static> {
-    fn add_button(&mut self, tx: Sender<K>, key: K);
-    fn remove_button(&mut self, key: &K);
-    fn swap_button(&mut self, left: &K, right: &K);
-    fn add_button_at(&mut self, tx: Sender<K>, key: K, pos: usize);
+pub trait Bar {
+    fn add_button(&mut self, tx: Sender<String>, key: &str);
+    fn remove_button(&mut self, key: &str);
+    fn swap_button(&mut self, left: &str, right: &str);
+    fn add_button_at(&mut self, tx: Sender<String>, key: &str, pos: usize);
 }
 
 // Quick Wrapper around Views to be able to set their positon
-struct PositionWrap<T: View, K> {
+struct PositionWrap<T: View> {
     view: T,
     pub pos: Vec2,
-    pub key: K,
+    pub key: String,
 }
 
-impl<T: View, K: 'static> ViewWrapper for PositionWrap<T, K> {
+impl<T: View> ViewWrapper for PositionWrap<T> {
     wrap_impl!(self.view: T);
 }
 
-impl<T: View, K> PositionWrap<T, K> {
-    pub fn new(view: T, key: K) -> Self {
+impl<T: View> PositionWrap<T> {
+    pub fn new(view: T, key: String) -> Self {
         Self {
             view,
             pos: Vec2::zero(),
@@ -39,8 +37,8 @@ impl<T: View, K> PositionWrap<T, K> {
     }
 }
 
-pub struct TabBar<K: Hash + Eq + Clone + Display + 'static> {
-    children: Vec<PositionWrap<Button, K>>,
+pub struct TabBar {
+    children: Vec<PositionWrap<Button>>,
     bar_size: Vec2,
     align: Align,
     last_rendered_size: Vec2,
@@ -49,12 +47,12 @@ pub struct TabBar<K: Hash + Eq + Clone + Display + 'static> {
     placement: Placement,
     cursor: Option<usize>,
     active: Option<usize>,
-    rx: Receiver<K>,
+    rx: Receiver<String>,
     invalidated: bool,
 }
 
-impl<K: Hash + Eq + Clone + Display + 'static> TabBar<K> {
-    pub fn new(rx: Receiver<K>) -> Self {
+impl TabBar {
+    pub fn new(rx: Receiver<String>) -> Self {
         Self {
             children: Vec::new(),
             sizes: Vec::new(),
@@ -120,9 +118,9 @@ impl<K: Hash + Eq + Clone + Display + 'static> TabBar<K> {
     }
 }
 
-impl<K: Hash + Eq + Clone + Display + 'static> Bar<K> for TabBar<K> {
-    fn add_button(&mut self, tx: Sender<K>, key: K) {
-        let k = key.clone();
+impl Bar for TabBar {
+    fn add_button(&mut self, tx: Sender<String>, key: &str) {
+        let k = key.to_owned();
         let button = Button::new_raw(format!(" {} ", key), move |_| {
             debug!("send {}", k);
             match tx.send(k.clone()) {
@@ -132,13 +130,13 @@ impl<K: Hash + Eq + Clone + Display + 'static> Bar<K> for TabBar<K> {
                 }
             }
         });
-        self.children.push(PositionWrap::new(button, key));
+        self.children.push(PositionWrap::new(button, key.to_owned()));
         self.cursor = Some(self.children.len() - 1);
         self.active = Some(self.children.len() - 1);
         self.invalidated = true;
     }
 
-    fn remove_button(&mut self, key: &K) {
+    fn remove_button(&mut self, key: &str) {
         if let Some(pos) = self
             .children
             .iter()
@@ -165,7 +163,7 @@ impl<K: Hash + Eq + Clone + Display + 'static> Bar<K> for TabBar<K> {
         self.invalidated = true;
     }
 
-    fn swap_button(&mut self, first: &K, second: &K) {
+    fn swap_button(&mut self, first: &str, second: &str) {
         let pos: Vec<usize> = self
             .children
             .iter()
@@ -187,8 +185,8 @@ impl<K: Hash + Eq + Clone + Display + 'static> Bar<K> for TabBar<K> {
         self.invalidated = true;
     }
 
-    fn add_button_at(&mut self, tx: Sender<K>, key: K, pos: usize) {
-        let k = key.clone();
+    fn add_button_at(&mut self, tx: Sender<String>, key: &str, pos: usize) {
+        let k = key.to_owned();
         let button = Button::new_raw(format!(" {} ", key), move |_| {
             debug!("send {}", k);
             match tx.send(k.clone()) {
@@ -200,12 +198,12 @@ impl<K: Hash + Eq + Clone + Display + 'static> Bar<K> for TabBar<K> {
         });
         self.cursor = Some(pos);
         self.active = Some(pos);
-        self.children.insert(pos, PositionWrap::new(button, key));
+        self.children.insert(pos, PositionWrap::new(button, key.to_owned()));
         self.invalidated = true;
     }
 }
 
-impl<K: Hash + Eq + Clone + Display + 'static> View for TabBar<K> {
+impl View for TabBar {
     fn draw(&self, printer: &Printer) {
         match self.placement {
             Placement::HorizontalBottom | Placement::HorizontalTop => {
