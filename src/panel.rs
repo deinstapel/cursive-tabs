@@ -47,10 +47,11 @@ impl Align {
 /// ```
 /// use cursive_tabs::{Align, TabPanel};
 /// use cursive::views::TextView;
+/// use cursive::view::Nameable;
 ///
 /// let mut tabs = TabPanel::new()
-///       .with_tab("First", TextView::new("First"))
-///       .with_tab("Second", TextView::new("Second"))
+///       .with_tab(TextView::new("First").with_name("First"))
+///       .with_tab(TextView::new("Second").with_name("Second"))
 ///       .with_bar_alignment(Align::Center);
 /// ```
 ///

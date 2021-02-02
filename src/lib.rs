@@ -8,13 +8,13 @@
 //! # Example
 //! All you need to do to create a new `TabView` is:
 //! ```
-//! # use cursive::{views::{TextView, Dialog}};
+//! # use cursive::{view::Nameable, views::{TextView, Dialog}};
 //! # use cursive_tabs::TabView;
 //! # let mut siv = cursive::default();
 //! let mut tabs = TabView::new();
 //! # // That is all what is needed to display an empty TabView, but of course
 //! # // you can add your own tabs now and switch them around as you want!
-//! # tabs.add_tab("First", TextView::new("Our first view!"));
+//! # tabs.add_tab(TextView::new("Our first view!").with_name("First"));
 //! # siv.add_layer(Dialog::around(tabs));
 //! # // When your done setting run cursive
 //! # // siv.run();
@@ -24,14 +24,14 @@
 //!
 //! # Full Example
 //! ```
-//! use cursive::{views::{TextView, Dialog}};
+//! use cursive::{view::Nameable, views::{TextView, Dialog}};
 //! use cursive_tabs::TabView;
 //!
 //! let mut siv = cursive::default();
 //! let mut tabs = TabView::new();
 //! // That is all what is needed to display an empty TabView, but of course
 //! // you can add your own tabs now and switch them around as you want!
-//! tabs.add_tab("First", TextView::new("Our first view!"));
+//! tabs.add_tab(TextView::new("Our first view!").with_name("First"));
 //! siv.add_layer(Dialog::around(tabs));
 //! // When your done setting run cursive
 //! // siv.run();
@@ -75,13 +75,13 @@ impl TabView {
     /// Returns a new TabView
     /// # Example
     /// ```
-    /// # use cursive::{views::{TextView, Dialog}};
+    /// # use cursive::{view::Nameable, views::{TextView, Dialog}};
     /// # use cursive_tabs::TabView;
     /// #  let mut siv = cursive::default();
     /// let mut tabs = TabView::new();
     /// #  // That is all what is needed to display an empty TabView, but of course
     /// #  // you can add your own tabs now and switch them around as you want!
-    /// #  tabs.add_tab("First", TextView::new("Our first view!"));
+    /// #  tabs.add_tab(TextView::new("Our first view!").with_name("First"));
     /// #  siv.add_layer(Dialog::around(tabs));
     /// #  // When your done setting run cursive
     /// #  // siv.run();

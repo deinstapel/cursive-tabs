@@ -3,6 +3,7 @@ use cursive::backends::puppet::observed::ObservedScreen;
 use cursive::backends::puppet::Backend;
 use cursive::event::{Event, Key};
 use cursive::views::TextView;
+use cursive::view::Nameable;
 use cursive::Vec2;
 use cursive_tabs::{Align, Placement, TabPanel, TabView};
 use insta::assert_display_snapshot;
@@ -85,9 +86,9 @@ fn test_puppet_screen() {
 fn end2end_add_at() {
     let (frames, _) = setup_test_environment(|siv: &mut cursive::Cursive| {
         let tabs = TabView::new()
-            .with_tab_at(0, TextView::new("Third"), 0)
-            .with_tab_at(1, TextView::new("First"), 0)
-            .with_tab_at(2, TextView::new("Second"), 1);
+            .with_tab_at(TextView::new("Third").with_name("0"), 0)
+            .with_tab_at(TextView::new("First").with_name("1"), 0)
+            .with_tab_at(TextView::new("Second").with_name("2"), 1);
         siv.add_layer(tabs);
     });
     assert_display_snapshot!(frames.try_iter().last().unwrap());
@@ -97,9 +98,9 @@ fn end2end_add_at() {
 fn end2end_add_at_action_change_tab() {
     let mut tsiv = TestCursive::new(|siv: &mut cursive::Cursive| {
         let tabs = TabView::new()
-            .with_tab_at(0, TextView::new("Third"), 0)
-            .with_tab_at(1, TextView::new("First"), 0)
-            .with_tab_at(2, TextView::new("Second"), 1);
+            .with_tab_at(TextView::new("Third").with_name("0"), 0)
+            .with_tab_at(TextView::new("First").with_name("1"), 0)
+            .with_tab_at(TextView::new("Second").with_name("2"), 1);
         siv.add_layer(tabs);
     });
     tsiv.input(Event::Key(Key::Up));
@@ -110,9 +111,9 @@ fn end2end_add_at_action_change_tab() {
 fn end2end_add_at_panel() {
     let (frames, _) = setup_test_environment(|siv: &mut cursive::Cursive| {
         let tabs = TabPanel::new()
-            .with_tab("Stonks", TextView::new("Pshhhh"))
-            .with_tab_at("So", TextView::new("Fooooo"), 0)
-            .with_tab_at("Much", TextView::new("Ahhhhh"), 1)
+            .with_tab(TextView::new("Pshhhh").with_name("Stonks"))
+            .with_tab_at(TextView::new("Fooooo").with_name("So"), 0)
+            .with_tab_at(TextView::new("Ahhhhh").with_name("Much"), 1)
             .with_bar_alignment(Align::Center);
         siv.add_layer(tabs);
     });
@@ -123,7 +124,7 @@ fn end2end_add_at_panel() {
 fn end2end_panel_smoke() {
     let (frames, _) = setup_test_environment(|siv: &mut cursive::Cursive| {
         let tabs = TabPanel::new()
-            .with_tab("Stronk test", TextView::new("Pshhhh"))
+            .with_tab(TextView::new("Pshhhh").with_name("Stronk test"))
             .with_active_tab("Stronk test")
             .unwrap_or_else(|_| panic!("Setting active tab has failed"))
             .with_bar_alignment(Align::Center);
@@ -136,9 +137,9 @@ fn end2end_panel_smoke() {
 fn end2end_remove_active() {
     let (frames, _) = setup_test_environment(|siv: &mut cursive::Cursive| {
         let mut tabs = TabView::new()
-            .with_tab(0, TextView::new("First"))
-            .with_tab(1, TextView::new("Second"));
-        tabs.remove_tab(&1).expect("Removal of active tab failed");
+            .with_tab(TextView::new("First").with_name("0"))
+            .with_tab(TextView::new("Second").with_name("1"));
+        tabs.remove_tab("1").expect("Removal of active tab failed");
         siv.add_layer(tabs);
     });
     assert_display_snapshot!(frames.try_iter().last().unwrap());
@@ -148,9 +149,9 @@ fn end2end_remove_active() {
 fn end2end_remove_inactive() {
     let (frames, _) = setup_test_environment(|siv: &mut cursive::Cursive| {
         let mut tabs = TabView::new()
-            .with_tab(0, TextView::new("First"))
-            .with_tab(1, TextView::new("Second"));
-        tabs.remove_tab(&0).expect("Removal failed.");
+            .with_tab(TextView::new("First").with_name("0"))
+            .with_tab(TextView::new("Second").with_name("1"));
+        tabs.remove_tab("0").expect("Removal failed.");
         siv.add_layer(tabs);
     });
     assert_display_snapshot!(frames.try_iter().last().unwrap());
@@ -160,11 +161,11 @@ fn end2end_remove_inactive() {
 fn end2end_swap() {
     let (frames, _) = setup_test_environment(|siv: &mut cursive::Cursive| {
         let mut tabs = TabPanel::new()
-            .with_tab("Stonks", TextView::new("Pshhhh"))
-            .with_tab_at("So", TextView::new("Fooooo"), 0)
-            .with_tab_at("Much", TextView::new("Ahhhhh"), 1)
+            .with_tab(TextView::new("Pshhhh").with_name("Stonks"))
+            .with_tab_at(TextView::new("Fooooo").with_name("So"), 0)
+            .with_tab_at(TextView::new("Ahhhhh").with_name("Much"), 1)
             .with_bar_alignment(Align::Center);
-        tabs.swap_tabs(&"So", &"Stonks");
+        tabs.swap_tabs("So", "Stonks");
         siv.add_layer(tabs);
     });
     assert_display_snapshot!(frames.try_iter().last().unwrap());
@@ -174,9 +175,9 @@ fn end2end_swap() {
 fn end2end_switch() {
     let (frames, _) = setup_test_environment(|siv: &mut cursive::Cursive| {
         let tabs = TabView::new()
-            .with_tab(0, TextView::new("First"))
-            .with_tab(1, TextView::new("Second"))
-            .with_active_tab(0)
+            .with_tab(TextView::new("First").with_name("0"))
+            .with_tab(TextView::new("Second").with_name("1"))
+            .with_active_tab("0")
             .unwrap_or_else(|_| panic!("Setting active tab has failed"));
         siv.add_layer(tabs);
     });
@@ -187,8 +188,8 @@ fn end2end_switch() {
 fn end2end_vertical_left() {
     let (frames, _) = setup_test_environment(|siv: &mut cursive::Cursive| {
         let tabs = TabPanel::new()
-            .with_tab("Stronk test", TextView::new("Pshhhh"))
-            .with_tab("Stronker test", TextView::new("Pshhhh"))
+            .with_tab(TextView::new("Pshhhh").with_name("Stronk test"))
+            .with_tab(TextView::new("Pshhhh").with_name("Stronker test"))
             .with_active_tab("Stronk test")
             .unwrap_or_else(|_| panic!("Setting active tab has failed"))
             .with_bar_alignment(Align::Center)
@@ -202,8 +203,8 @@ fn end2end_vertical_left() {
 fn end2end_vertical_left_with_action_change_tab() {
     let mut tsiv = TestCursive::new(|siv: &mut cursive::Cursive| {
         let tabs = TabPanel::new()
-            .with_tab("Stronk test", TextView::new("Pshhhh"))
-            .with_tab("Stronker test", TextView::new("Pshhhh"))
+            .with_tab(TextView::new("Pshhhh").with_name("Stronk test"))
+            .with_tab(TextView::new("Pshhhh").with_name("Stronker test"))
             .with_active_tab("Stronk test")
             .unwrap_or_else(|_| panic!("Setting active tab has failed"))
             .with_bar_alignment(Align::Center)
@@ -218,7 +219,7 @@ fn end2end_vertical_left_with_action_change_tab() {
 fn end2end_vertical_right() {
     let (frames, _) = setup_test_environment(|siv: &mut cursive::Cursive| {
         let tabs = TabPanel::new()
-            .with_tab("Stronk test", TextView::new("Pshhhh"))
+            .with_tab(TextView::new("Pshhhh").with_name("Stronk test"))
             .with_active_tab("Stronk test")
             .unwrap_or_else(|_| panic!("Setting active tab has failed"))
             .with_bar_alignment(Align::Center)
