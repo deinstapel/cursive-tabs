@@ -10,6 +10,7 @@ use num::clamp;
 use crate::Bar;
 use crate::TabBar;
 use crate::TabView;
+use crate::error;
 
 #[derive(Clone, Copy, Debug)]
 pub enum Align {
@@ -104,7 +105,7 @@ impl TabPanel {
 
     /// Non-consuming variant to set the active tab in the `TabView`.
     /// Note: Calls `set_active_tab` on the enclosed `TabView`.
-    pub fn set_active_tab(&mut self, id: &str) -> Result<(), ()> {
+    pub fn set_active_tab(&mut self, id: &str) -> Result<(), error::IdNotFound> {
         self.tabs.set_active_tab(id)
     }
 
@@ -162,7 +163,7 @@ impl TabPanel {
     }
 
     /// Remove a tab of the enclosed `TabView`.
-    pub fn remove_tab(&mut self, id: &str) -> Result<(), ()> {
+    pub fn remove_tab(&mut self, id: &str) -> Result<(), error::IdNotFound> {
         self.bar.remove_button(id);
         self.tabs.remove_tab(id)
     }

@@ -49,6 +49,7 @@ use std::collections::HashMap;
 
 mod bar;
 mod panel;
+mod error;
 
 // Reexports
 use bar::{Bar, TabBar};
@@ -99,12 +100,12 @@ impl TabView {
 
     /// Returns the currently active tab Id.
     pub fn active_tab(&self) -> Option<&str> {
-        self.current_id.as_ref().and_then(|v| Some(v.as_str()))
+        self.current_id.as_deref()
     }
 
     /// Set the currently active (visible) tab.
     /// If the tab id is not known, an error is returned and no action is performed.
-    pub fn set_active_tab(&mut self, id: &str) -> Result<(), ()> {
+    pub fn set_active_tab(&mut self, id: &str) -> Result<(), error::IdNotFound> {
         if self.map.contains_key(id) {
             if let Some(sender) = &self.active_key_tx {
                 match sender.send(id.to_owned()) {
@@ -119,7 +120,7 @@ impl TabView {
             self.invalidated = true;
             Ok(())
         } else {
-            Err(())
+            Err(error::IdNotFound)
         }
     }
 
@@ -207,7 +208,7 @@ impl TabView {
     /// Removes a tab with the given id from the `TabView`.
     /// If the removed tab is active at the moment, the `TabView` will unfocus it and
     /// the focus needs to be set manually afterwards, or a new view has to be inserted.
-    pub fn remove_tab(&mut self, id: &str) -> Result<(), ()> {
+    pub fn remove_tab(&mut self, id: &str) -> Result<(), error::IdNotFound> {
         if self.map.remove(id).is_some() {
             if let Some(key) = &self.current_id {
                 if key == id {
@@ -220,7 +221,7 @@ impl TabView {
             self.invalidated = true;
             Ok(())
         } else {
-            Err(())
+            Err(error::IdNotFound)
         }
     }
 
