@@ -120,7 +120,7 @@ impl TabView {
             self.invalidated = true;
             Ok(())
         } else {
-            Err(error::IdNotFound)
+            Err(error::IdNotFound{id: id.to_owned()})
         }
     }
 
@@ -221,7 +221,7 @@ impl TabView {
             self.invalidated = true;
             Ok(())
         } else {
-            Err(error::IdNotFound)
+            Err(error::IdNotFound{id: id.to_owned()})
         }
     }
 
