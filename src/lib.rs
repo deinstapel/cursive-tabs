@@ -201,6 +201,11 @@ impl TabView {
             }
         }
         if let (Some(fst_pos), Some(snd_pos)) = (fst_pos, snd_pos) {
+            if let Some(cur) = self.current_id.as_ref() {
+                if self.active_key_tx.is_some() && (fst == cur || snd == cur) {
+                    self.active_key_tx.as_mut().unwrap().send(cur.to_owned()).expect("Sending failed.");
+                }
+            }
             self.key_order.swap(fst_pos, snd_pos);
         }
     }
