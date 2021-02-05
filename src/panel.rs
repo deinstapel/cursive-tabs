@@ -103,12 +103,14 @@ impl TabPanel {
         self.tabs.active_tab()
     }
 
-    pub fn get_active_tab(&self) -> Option<&Box<dyn View>> {
-        self.tabs.get_active_tab()
+    /// Returns a reference to the underlying view.
+    pub fn active_view(&self) -> Option<&dyn View> {
+        self.tabs.active_view()
     }
 
-    pub fn get_active_tab_mut(&mut self) -> Option<&mut Box<dyn View>> {
-        self.tabs.get_active_tab_mut()
+    /// Returns a mutable reference to the underlying view.
+    pub fn active_view_mut(&mut self) -> Option<&mut dyn View> {
+        self.tabs.active_view_mut()
     }
 
     /// Non-consuming variant to set the active tab in the `TabView`.

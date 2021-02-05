@@ -103,13 +103,15 @@ impl TabView {
         self.current_id.as_deref()
     }
 
-    pub fn get_active_tab(&self) -> Option<&Box<dyn View>> {
-        self.active_tab().and_then(|k| self.map.get(k))
+    /// Returns a reference to the underlying view.
+    pub fn active_view(&self) -> Option<&dyn View> {
+        self.active_tab().and_then(|k| self.map.get(k).map(|v| &**v))
     }
 
-    pub fn get_active_tab_mut(&mut self) -> Option<&mut Box<dyn View>> {
+    /// Returns a mutable reference to the underlying view.
+    pub fn active_view_mut(&mut self) -> Option<&mut dyn View> {
         if let Some(k) = self.current_id.as_ref() {
-            self.map.get_mut(k)
+            self.map.get_mut(k).map(|v| &mut**v)
         } else {
             None
         }
