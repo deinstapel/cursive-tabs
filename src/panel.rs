@@ -113,6 +113,14 @@ impl TabPanel {
         self.tabs.active_view_mut()
     }
 
+    pub fn views(&self) -> Vec<&dyn View> {
+        self.tabs.views()
+    }
+
+    pub fn views_mut(&mut self) -> Vec<&mut dyn View> {
+        self.tabs.views_mut()
+    }
+
     /// Non-consuming variant to set the active tab in the `TabView`.
     /// Note: Calls `set_active_tab` on the enclosed `TabView`.
     pub fn set_active_tab(&mut self, id: &str) -> Result<(), error::IdNotFound> {

@@ -118,6 +118,15 @@ impl TabView {
     }
 
 
+    pub fn views(&self) -> Vec<&dyn View> {
+        self.map.values().map(|v| &**v).collect()
+    }
+
+    // Mutable references to all mutable views.
+    pub fn views_mut(&mut self) -> Vec<&mut dyn View> {
+        self.map.values_mut().map(|v| &mut **v).collect()
+    }
+
     /// Set the currently active (visible) tab.
     /// If the tab id is not known, an error is returned and no action is performed.
     pub fn set_active_tab(&mut self, id: &str) -> Result<(), error::IdNotFound> {
