@@ -1,5 +1,5 @@
 use cursive::view::{Boxable, Identifiable};
-use cursive::views::{Button, LinearLayout, PaddedView, TextArea, TextView};
+use cursive::views::{Button, LinearLayout, PaddedView, TextArea, TextView, NamedView};
 use cursive_tabs::{Align, TabPanel};
 
 const TAB_0: &str =
@@ -24,18 +24,17 @@ to your Cargo.toml!
 
 fn main() {
     let mut siv = cursive::default();
-    let panel = TabPanel::new()
+    let mut panel = TabPanel::new()
         .with_tab(TextView::new(TAB_0).with_name("0"))
         .with_tab(TextView::new(TAB_1).with_name("1"))
         .with_tab(TextView::new(TAB_2).with_name("2"))
         .with_tab(TextView::new(TAB_3).with_name("3"))
         .with_tab(PaddedView::lrtb(2, 2, 1, 1, TextArea::new()).with_name("4"))
-        .with_bar_alignment(Align::End)
-        .with_active_tab("0")
-        .unwrap_or_else(|_| {
-            panic!("Could not set the first tab as active tab! This is probably an issue with the implementation in the lib. Please report!");
-        });
+        .with_bar_alignment(Align::End);
 
+    let view = panel.active_view_mut().unwrap().downcast_mut::<NamedView<PaddedView<TextArea>>>().unwrap();
+    view.get_mut().get_inner_mut().set_content("This is additional text, set after the creation of the view!");
+    panel.set_active_tab("0").expect("View not found");
 
     siv.add_layer(
         LinearLayout::vertical()
