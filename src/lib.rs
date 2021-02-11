@@ -103,6 +103,30 @@ impl TabView {
         self.current_id.as_deref()
     }
 
+    /// Returns a reference to the underlying view.
+    pub fn active_view(&self) -> Option<&dyn View> {
+        self.active_tab().and_then(|k| self.map.get(k).map(|v| &**v))
+    }
+
+    /// Returns a mutable reference to the underlying view.
+    pub fn active_view_mut(&mut self) -> Option<&mut dyn View> {
+        if let Some(k) = self.current_id.as_ref() {
+            self.map.get_mut(k).map(|v| &mut**v)
+        } else {
+            None
+        }
+    }
+
+
+    pub fn views(&self) -> Vec<&dyn View> {
+        self.map.values().map(|v| &**v).collect()
+    }
+
+    // Mutable references to all mutable views.
+    pub fn views_mut(&mut self) -> Vec<&mut dyn View> {
+        self.map.values_mut().map(|v| &mut **v).collect()
+    }
+
     /// Set the currently active (visible) tab.
     /// If the tab id is not known, an error is returned and no action is performed.
     pub fn set_active_tab(&mut self, id: &str) -> Result<(), error::IdNotFound> {
