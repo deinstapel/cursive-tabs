@@ -21,7 +21,7 @@ num = "0.3"
 [dev-dependencies]
 serde_json = "1.0.48"
 cursive = "0.16"
-insta = "1.5"
+insta = "1.7"
 
 [badges]
 travis-ci = { repository = "deinstapel/cursive-tabs" }
