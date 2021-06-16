@@ -1,9 +1,9 @@
 <h1 align="center">Welcome to cursive-tabs 👋</h1>
 <p align="center">
-  <a href="https://travis-ci.org/deinstapel/cursive-tabs">
+  <a href="https://github.com/deinstapel/cursive-tabs/actions">
     <img src="https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fdeinstapel.github.io%2Fcursive-tabs%2Fstable-build.json" alt="stable build">
   </a>
-  <a href="https://travis-ci.org/deinstapel/cursive-tabs">
+  <a href="https://github.com/deinstapel/cursive-tabs/actions">
     <img src="https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fdeinstapel.github.io%2Fcursive-tabs%2Fnightly-build.json" alt="nightly build">
   </a>
   <a href="https://crates.io/crates/cursive-tabs">
@@ -123,11 +123,9 @@ The rest is depending on how you want to style your panel, but if you have anymo
 
 If you find any bugs/unexpected behaviour or you have a proposition for future changes open an issue describing the current behaviour and what you expected.
 
-## Development [![cargo test](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fdeinstapel.github.io%2Fcursive-tabs%2Fcargo-test.json)](https://travis-ci.org/deinstapel/cursive-tabs)
+## Development [![cargo test](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fdeinstapel.github.io%2Fcursive-tabs%2Fcargo-test.json)](https://github.com/deinstapel/cursive-tabs/actions)
 
 ### Running the tests
-
-> The tests will no longer kill your tmux server. As the tests have moved to use cursive exclusively in combination with [insta](https://crates.io/crates/insta)
 
 #### Running all test suites
 
