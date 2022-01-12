@@ -1,5 +1,5 @@
-use cursive::view::{Boxable, Identifiable};
-use cursive::views::{Button, LinearLayout, PaddedView, TextArea, TextView, NamedView};
+use cursive::view::{Nameable, Resizable};
+use cursive::views::{Button, LinearLayout, NamedView, PaddedView, TextArea, TextView};
 use cursive_tabs::{Align, TabPanel};
 
 const TAB_0: &str =
@@ -32,8 +32,14 @@ fn main() {
         .with_tab(PaddedView::lrtb(2, 2, 1, 1, TextArea::new()).with_name("4"))
         .with_bar_alignment(Align::End);
 
-    let view = panel.active_view_mut().unwrap().downcast_mut::<NamedView<PaddedView<TextArea>>>().unwrap();
-    view.get_mut().get_inner_mut().set_content("This is additional text, set after the creation of the view!");
+    let view = panel
+        .active_view_mut()
+        .unwrap()
+        .downcast_mut::<NamedView<PaddedView<TextArea>>>()
+        .unwrap();
+    view.get_mut()
+        .get_inner_mut()
+        .set_content("This is additional text, set after the creation of the view!");
     panel.set_active_tab("0").expect("View not found");
 
     siv.add_layer(

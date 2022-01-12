@@ -41,15 +41,15 @@ extern crate cursive_core as cursive;
 use crossbeam::channel::{Receiver, Sender};
 use cursive::direction::Direction;
 use cursive::event::{AnyCb, Event, EventResult};
-use cursive::view::{Selector, View, ViewNotFound};
+use cursive::view::{CannotFocus, Selector, View, ViewNotFound};
 use cursive::views::NamedView;
 use cursive::{Printer, Rect, Vec2};
 use log::debug;
 use std::collections::HashMap;
 
 mod bar;
-mod panel;
 mod error;
+mod panel;
 
 // Reexports
 use bar::{Bar, TabBar};
@@ -105,18 +105,18 @@ impl TabView {
 
     /// Returns a reference to the underlying view.
     pub fn active_view(&self) -> Option<&dyn View> {
-        self.active_tab().and_then(|k| self.map.get(k).map(|v| &**v))
+        self.active_tab()
+            .and_then(|k| self.map.get(k).map(|v| &**v))
     }
 
     /// Returns a mutable reference to the underlying view.
     pub fn active_view_mut(&mut self) -> Option<&mut dyn View> {
         if let Some(k) = self.current_id.as_ref() {
-            self.map.get_mut(k).map(|v| &mut**v)
+            self.map.get_mut(k).map(|v| &mut **v)
         } else {
             None
         }
     }
-
 
     pub fn views(&self) -> Vec<&dyn View> {
         self.map.values().map(|v| &**v).collect()
@@ -144,7 +144,7 @@ impl TabView {
             self.invalidated = true;
             Ok(())
         } else {
-            Err(error::IdNotFound{id: id.to_owned()})
+            Err(error::IdNotFound { id: id.to_owned() })
         }
     }
 
@@ -227,7 +227,11 @@ impl TabView {
         if let (Some(fst_pos), Some(snd_pos)) = (fst_pos, snd_pos) {
             if let Some(cur) = self.current_id.as_ref() {
                 if self.active_key_tx.is_some() && (fst == cur || snd == cur) {
-                    self.active_key_tx.as_mut().unwrap().send(cur.to_owned()).expect("Sending failed.");
+                    self.active_key_tx
+                        .as_mut()
+                        .unwrap()
+                        .send(cur.to_owned())
+                        .expect("Sending failed.");
                 }
             }
             self.key_order.swap(fst_pos, snd_pos);
@@ -250,7 +254,7 @@ impl TabView {
             self.invalidated = true;
             Ok(())
         } else {
-            Err(error::IdNotFound{id: id.to_owned()})
+            Err(error::IdNotFound { id: id.to_owned() })
         }
     }
 
@@ -290,7 +294,7 @@ impl TabView {
             let idx_key = Self::index_key(&cur_key, &self.key_order);
             let idx = (self.key_order.len() + idx_key - 1) % self.key_order.len();
 
-            let key =&self.key_order[idx].clone();
+            let key = &self.key_order[idx].clone();
             self.set_active_tab(key)
                 .expect("Key content changed during operation, this should not happen");
         }
@@ -357,15 +361,15 @@ impl View for TabView {
         }
     }
 
-    fn take_focus(&mut self, src: Direction) -> bool {
+    fn take_focus(&mut self, src: Direction) -> Result<EventResult, CannotFocus> {
         if let Some(key) = &self.current_id {
             if let Some(view) = self.map.get_mut(key) {
                 view.take_focus(src)
             } else {
-                false
+                Err(CannotFocus)
             }
         } else {
-            false
+            Err(CannotFocus)
         }
     }
 
@@ -375,7 +379,7 @@ impl View for TabView {
         }
     }
 
-    fn focus_view(&mut self, slt: &Selector) -> Result<(), ViewNotFound> {
+    fn focus_view(&mut self, slt: &Selector) -> Result<EventResult, ViewNotFound> {
         if let Some(key) = &self.current_id {
             if let Some(view) = self.map.get_mut(key) {
                 view.focus_view(slt)
@@ -406,10 +410,10 @@ impl View for TabView {
             if let Some(view) = self.map.get(key) {
                 view.important_area(size)
             } else {
-                Rect::from((1, 1))
+                Rect::from_point((1, 1))
             }
         } else {
-            Rect::from((1, 1))
+            Rect::from_point((1, 1))
         }
     }
 }
@@ -426,15 +430,15 @@ mod test {
 
     #[test]
     fn insert() {
-        let mut tabs = TabView::new().with_tab(DummyView{}.with_name("0"));
-        tabs.add_tab(DummyView{}.with_name("1"));
+        let mut tabs = TabView::new().with_tab(DummyView {}.with_name("0"));
+        tabs.add_tab(DummyView {}.with_name("1"));
     }
 
     #[test]
     fn switch() {
         let mut tabs = TabView::new();
-        tabs.add_tab(DummyView{}.with_name("0"));
-        tabs.add_tab(DummyView{}.with_name("1"));
+        tabs.add_tab(DummyView {}.with_name("0"));
+        tabs.add_tab(DummyView {}.with_name("1"));
         assert_eq!(tabs.active_tab().expect("Id not correct"), "1");
         tabs.set_active_tab("0").expect("Id not taken");
         assert_eq!(tabs.active_tab().expect("Id not correct"), "0");
@@ -443,8 +447,8 @@ mod test {
     #[test]
     fn remove() {
         let mut tabs = TabView::new();
-        tabs.add_tab(DummyView{}.with_name("0"));
-        tabs.add_tab(DummyView{}.with_name("1"));
+        tabs.add_tab(DummyView {}.with_name("0"));
+        tabs.add_tab(DummyView {}.with_name("1"));
         assert_eq!(tabs.remove_tab("1"), Ok(()));
         assert!(tabs.active_tab().is_none());
     }
