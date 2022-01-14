@@ -130,7 +130,8 @@ impl Bar for TabBar {
                 }
             }
         });
-        self.children.push(PositionWrap::new(button, key.to_owned()));
+        self.children
+            .push(PositionWrap::new(button, key.to_owned()));
         self.cursor = Some(self.children.len() - 1);
         self.active = Some(self.children.len() - 1);
         self.invalidated = true;
@@ -198,7 +199,8 @@ impl Bar for TabBar {
         });
         self.cursor = Some(pos);
         self.active = Some(pos);
-        self.children.insert(pos, PositionWrap::new(button, key.to_owned()));
+        self.children
+            .insert(pos, PositionWrap::new(button, key.to_owned()));
         self.invalidated = true;
     }
 }
