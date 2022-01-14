@@ -1,4 +1,4 @@
-use cursive::view::{Boxable, Identifiable};
+use cursive::view::{Nameable, Resizable};
 use cursive::views::{Button, LinearLayout, PaddedView, TextArea, TextView};
 use cursive_tabs::{Align, TabPanel};
 
@@ -35,7 +35,6 @@ fn main() {
         .unwrap_or_else(|_| {
             panic!("Could not set the first tab as active tab! This is probably an issue with the implementation in the lib. Please report!");
         });
-
 
     siv.add_fullscreen_layer(
         LinearLayout::vertical()

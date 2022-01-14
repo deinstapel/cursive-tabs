@@ -1,16 +1,16 @@
 use crossbeam::channel::{unbounded, Sender};
 use cursive::direction::{Absolute, Direction};
 use cursive::event::{AnyCb, Event, EventResult, Key};
-use cursive::view::{Selector, View, ViewNotFound};
+use cursive::view::{CannotFocus, Selector, View, ViewNotFound};
 use cursive::views::NamedView;
 use cursive::{Printer, Vec2};
 use log::debug;
 use num::clamp;
 
+use crate::error;
 use crate::Bar;
 use crate::TabBar;
 use crate::TabView;
-use crate::error;
 
 #[derive(Clone, Copy, Debug)]
 pub enum Align {
@@ -294,33 +294,33 @@ impl TabPanel {
             EventResult::Consumed(cb) => EventResult::Consumed(cb),
             EventResult::Ignored => match evt {
                 Event::Key(Key::Down) if self.bar_placement == Placement::HorizontalTop => {
-                    if self.tabs.take_focus(Direction::up()) {
+                    if let Ok(result) = self.tabs.take_focus(Direction::up()) {
                         self.bar_focused = false;
-                        EventResult::Consumed(None)
+                        result.and(EventResult::consumed())
                     } else {
                         EventResult::Ignored
                     }
                 }
                 Event::Key(Key::Up) if self.bar_placement == Placement::HorizontalBottom => {
-                    if self.tabs.take_focus(Direction::down()) {
+                    if let Ok(result) = self.tabs.take_focus(Direction::down()) {
                         self.bar_focused = false;
-                        EventResult::Consumed(None)
+                        result.and(EventResult::consumed())
                     } else {
                         EventResult::Ignored
                     }
                 }
                 Event::Key(Key::Left) if self.bar_placement == Placement::VerticalRight => {
-                    if self.tabs.take_focus(Direction::right()) {
+                    if let Ok(result) = self.tabs.take_focus(Direction::right()) {
                         self.bar_focused = false;
-                        EventResult::Consumed(None)
+                        result.and(EventResult::consumed())
                     } else {
                         EventResult::Ignored
                     }
                 }
                 Event::Key(Key::Right) if self.bar_placement == Placement::VerticalLeft => {
-                    if self.tabs.take_focus(Direction::left()) {
+                    if let Ok(result) = self.tabs.take_focus(Direction::left()) {
                         self.bar_focused = false;
-                        EventResult::Consumed(None)
+                        result.and(EventResult::consumed())
                     } else {
                         EventResult::Ignored
                     }
@@ -361,7 +361,7 @@ impl TabPanel {
         }
     }
 
-    fn check_focus_grab(&mut self, event: &Event) {
+    fn check_focus_grab(&mut self, event: &Event) -> EventResult {
         if let Event::Mouse {
             offset,
             position,
@@ -373,14 +373,15 @@ impl TabPanel {
                 offset, position
             );
             if !event.grabs_focus() {
-                return;
+                return EventResult::Ignored;
             }
 
             match self.bar_placement {
                 Placement::VerticalRight | Placement::HorizontalBottom => {
                     if position > offset && self.tab_size.fits(position - offset) {
-                        if self.tabs.take_focus(Direction::none()) {
+                        if let Ok(res) = self.tabs.take_focus(Direction::none()) {
                             self.bar_focused = false;
+                            return res;
                         }
                     } else {
                         self.bar_focused = true;
@@ -393,12 +394,14 @@ impl TabPanel {
                         && (self.bar_size - Vec2::new(1, 1)).fits(position - offset)
                     {
                         self.bar_focused = true;
-                    } else if self.tabs.take_focus(Direction::none()) {
+                    } else if let Ok(res) = self.tabs.take_focus(Direction::none()) {
                         self.bar_focused = false;
+                        return res;
                     }
                 }
             }
         }
+        EventResult::Ignored
     }
 }
 
@@ -489,70 +492,89 @@ impl View for TabPanel {
     }
 
     fn on_event(&mut self, evt: Event) -> EventResult {
-        self.check_focus_grab(&evt);
+        let result = self.check_focus_grab(&evt);
 
-        if self.bar_focused {
+        result.and(if self.bar_focused {
             self.on_event_focused(evt)
         } else {
             self.on_event_unfocused(evt)
-        }
+        })
     }
 
-    fn take_focus(&mut self, d: Direction) -> bool {
+    fn take_focus(&mut self, d: Direction) -> Result<EventResult, CannotFocus> {
         let tabs_take_focus = |panel: &mut TabPanel, d: Direction| {
-            if panel.tabs.take_focus(d) {
+            let result = panel.tabs.take_focus(d);
+
+            if result.is_ok() {
                 panel.bar_focused = false;
             } else {
                 panel.bar_focused = true;
             }
+
+            result
         };
+
+        let mut result = Ok(EventResult::consumed());
 
         match self.bar_placement {
             Placement::HorizontalBottom => match d {
-                Direction::Abs(Absolute::Up) => tabs_take_focus(self, d),
+                Direction::Abs(Absolute::Up) => {
+                    result = tabs_take_focus(self, d);
+                }
                 Direction::Abs(Absolute::Left) | Direction::Abs(Absolute::Right) => {
                     if !self.bar_focused {
-                        tabs_take_focus(self, d)
+                        result = tabs_take_focus(self, d);
                     }
                 }
-                Direction::Abs(Absolute::Down) => self.bar_focused = true,
-                _ => {}
+                Direction::Abs(Absolute::Down) => {
+                    self.bar_focused = true;
+                }
+                _ => (),
             },
             Placement::HorizontalTop => match d {
-                Direction::Abs(Absolute::Down) => tabs_take_focus(self, d),
+                Direction::Abs(Absolute::Down) => {
+                    result = tabs_take_focus(self, d);
+                }
                 Direction::Abs(Absolute::Left) | Direction::Abs(Absolute::Right) => {
                     if !self.bar_focused {
-                        tabs_take_focus(self, d)
+                        result = tabs_take_focus(self, d);
                     }
                 }
-                Direction::Abs(Absolute::Up) => self.bar_focused = true,
-                _ => {}
+                Direction::Abs(Absolute::Up) => {
+                    self.bar_focused = true;
+                }
+                _ => (),
             },
             Placement::VerticalLeft => match d {
-                Direction::Abs(Absolute::Right) => tabs_take_focus(self, d),
+                Direction::Abs(Absolute::Right) => {
+                    result = tabs_take_focus(self, d);
+                }
                 Direction::Abs(Absolute::Up) | Direction::Abs(Absolute::Down) => {
                     if !self.bar_focused {
-                        tabs_take_focus(self, d)
+                        result = tabs_take_focus(self, d);
                     }
                 }
                 Direction::Abs(Absolute::Left) => self.bar_focused = true,
                 _ => {}
             },
             Placement::VerticalRight => match d {
-                Direction::Abs(Absolute::Left) => tabs_take_focus(self, d),
+                Direction::Abs(Absolute::Left) => {
+                    result = tabs_take_focus(self, d);
+                }
                 Direction::Abs(Absolute::Up) | Direction::Abs(Absolute::Down) => {
                     if !self.bar_focused {
-                        tabs_take_focus(self, d)
+                        result = tabs_take_focus(self, d)
                     }
                 }
                 Direction::Abs(Absolute::Right) => self.bar_focused = true,
                 _ => {}
             },
         }
-        true
+
+        return Ok(result.unwrap_or(EventResult::Ignored));
     }
 
-    fn focus_view(&mut self, slt: &Selector) -> Result<(), ViewNotFound> {
+    fn focus_view(&mut self, slt: &Selector) -> Result<EventResult, ViewNotFound> {
         self.tabs.focus_view(slt)
     }
 
