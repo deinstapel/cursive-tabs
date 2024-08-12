@@ -492,13 +492,22 @@ impl View for TabPanel {
     }
 
     fn on_event(&mut self, evt: Event) -> EventResult {
-        let result = self.check_focus_grab(&evt);
+        match evt {
+            Event::Refresh => {
+                self.tabs.on_event(Event::Refresh);
+                self.bar.on_event(Event::Refresh);
+                EventResult::Consumed(None)
+            }
+            _ => {
+                let result = self.check_focus_grab(&evt);
 
-        result.and(if self.bar_focused {
-            self.on_event_focused(evt)
-        } else {
-            self.on_event_unfocused(evt)
-        })
+                result.and(if self.bar_focused {
+                    self.on_event_focused(evt)
+                } else {
+                    self.on_event_unfocused(evt)
+                })
+            }
+        }
     }
 
     fn take_focus(&mut self, d: Direction) -> Result<EventResult, CannotFocus> {
